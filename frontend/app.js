@@ -7,6 +7,7 @@
     var debug, in_snake;
     $scope.coord = [void 0, void 0];
     $scope.drawing = false;
+    $scope.info = "";
     $scope.snake = [];
     $scope.grid = [["E", "N", "K", "N"], ["T", "R", "A", "G"], ["A", "P", "Å", "A"], ["L", "S", "V", "K"]];
     $scope.score = function(char) {
@@ -15,20 +16,26 @@
     debug = function() {};
     $scope.down = function() {
       $scope.drawing = true;
-      $scope.push();
-      return debug();
+      return $scope.push();
     };
     $scope.up = function() {
       $scope.drawing = false;
-      $scope.erase();
-      return debug();
+      return $scope.erase();
     };
-    $scope.enter = function(x, y) {
-      $scope.coord = [x, y];
-      if ($scope.drawing) {
-        $scope.push();
+    $scope.enter = function($event) {
+      var char, elem, tile, x, y;
+      if ($event.originalEvent.type === "touchmove") {
+        $scope.drawing = true;
       }
-      return debug();
+      elem = $(document.elementFromPoint($event.pageX, $event.pageY));
+      tile = elem.closest('.tile');
+      char = tile.find('.char');
+      x = tile.find('.x').text();
+      y = tile.find('.y').text();
+      $scope.coord = [x, y];
+      if ($scope.drawing && x && y) {
+        return $scope.push();
+      }
     };
     in_snake = function(x, y) {
       return _.some($scope.snake, function(e) {

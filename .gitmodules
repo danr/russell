@@ -1,0 +1,3 @@
+[submodule "frontend/lib/angular-mobile"]
+	path = frontend/lib/angular-mobile
+	url = https://github.com/tigbro/jquery-mobile-angular-adapter.git
