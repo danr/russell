@@ -1,0 +1,35 @@
+<!doctype html>
+<html ng-app="russel">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <script src="lib/angular.min.js" type="text/javascript"></script>
+    <script src="lib/underscore-min.js" type="text/javascript"></script>
+
+    <script src="app.js" type="text/javascript"></script>
+
+    <link href='index.css' rel='stylesheet' type='text/css'>
+    <title>
+      Russels ordorm
+    </title>
+  </head>
+  <body>
+
+    <div class="container">
+
+      <div ng-controller="GridCtrl" ng-mousedown="down()" ng-mouseup="up()">
+        <div class="word">&nbsp;{{ word() }}&nbsp;</div>
+        <div class="row" ng-repeat="row in grid">
+          <div class="tile"
+            ng-repeat="col in row"
+            ng-mouseenter="enter($index,$parent.$index)"
+            ng-class="{'selected' : selected($index,$parent.$index)}">
+            <span class="char">{{ col }}</span>
+            <span class="score">{{ score(col) }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </body>
+</html>

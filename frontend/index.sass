@@ -1,0 +1,54 @@
+div.word
+  text-align: center
+  font:
+    family: sans-serif
+    size: 50px
+
+
+div.row
+  height: 150px
+  display: block
+
+div.selected
+  border-width: 2px
+  border-style: solid
+  border-color: #e82
+
+.tile
+  width: 110px
+  height: 110px
+  margin: 20px
+  display: inline-block
+  text-align: center
+
+  border-width: 2px
+  border-style: solid
+  border-color: #000
+
+  -webkit-user-select: none // Chrome/Safari
+  -moz-user-select: none // Firefox
+  -ms-user-select: none // IE10+
+
+  // Rules below not implemented in browsers yet
+  -o-user-select: none
+  user-select: none
+
+span.char
+  font:
+    family: sans-serif
+    size: 100px
+
+span.score
+  font:
+    family: sans-serif
+    size: 20px
+  vertical-align: top
+
+div.container, div.footer
+  width: 650px
+  background: #fff
+  min-height: 100%
+  padding: 5px
+  margin:
+    left: auto
+    right: auto
