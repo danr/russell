@@ -1,29 +1,17 @@
-// Aspect ratio div: http://stackoverflow.com/questions/2066088/use-css-and-maybe-javascript-to-make-an-element-be-square-or-maintain-a-speci
-
 div.word
   text-align: center
-  font:
-    family: sans-serif
-    size: 50px
-
+  font-family: sans-serif
 
 div.row
-  height: 25%
   display: block
 
 div.selected
-  border-width: 2px
-  border-style: solid
   border-color: #e82
 
 .tile
-  width: 20%
-  height: 20%
-  margin: 2%
   display: inline-block
   text-align: center
 
-  border-width: 2px
   border-style: solid
   border-color: #000
 
@@ -35,28 +23,32 @@ div.selected
   -o-user-select: none
   user-select: none
 
-span.x
+span#x
   display: none
 
-span.y
+span#y
   display: none
 
 span.char
-  font:
-    family: sans-serif
-    size: 100px
+  font-family: sans-serif
 
 span.score
-  font:
-    family: sans-serif
-    size: 20px
+  font-family: sans-serif
   vertical-align: top
+  float: right
+
+span.shadow-score
+  font-family: sans-serif
+  color: #fff
+  vertical-align: top
+  float: left
 
 div.container, div.footer
-  width: 100%
   background: #fff
-  min-height: 100%
-  padding: 5px
   margin:
     left: auto
     right: auto
+
+body, .container
+  margin: 0px
+  padding: 0px

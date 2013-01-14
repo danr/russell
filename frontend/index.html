@@ -10,7 +10,7 @@
     <script src="lib/underscore-min.js" type="text/javascript"></script>
     <script src="lib/angular-mobile/compiled/jquery-mobile-angular-adapter-standalone-1.2.0.js" type="text/javascript"></script>
 
-    <script src="app.js" type="text/javascript"></script>
+    <script src="js/app.js" type="text/javascript"></script>
 
     <link href='index.css' rel='stylesheet' type='text/css'>
     <title>
@@ -25,15 +25,16 @@
     <div class="container">
 
       <div class="word">&nbsp;{{ word() }}&nbsp;{{ info }}&nbsp;</div>
-        <div class="row" ng-repeat="row in grid">
-          <div class="tile"
-            ng-repeat="col in row"
-            ng-class="{'selected' : selected($index,$parent.$index)}">
-            <span class="char">{{ col }}</span>
-            <span class="score">{{ score(col) }}</span>
-            <span class="x">{{ $index }}</span>
-            <span class="y">{{ $parent.$index }}</span>
-          </div>
+
+      <div class="row" ng-init="y = $index" ng-repeat="row in grid">
+        <div class="tile" ng-init="x = $index" ng-repeat="col in row"
+          ng-controller="TileCtrl"
+          ng-class="status(x,y)">
+          <span class="shadow-score">{{ score(col) }}</span>
+          <span class="char">{{ col }}</span>
+          <span class="score">{{ score(col) }}</span>
+          <span id="x">{{ x }}</span>
+          <span id="y">{{ y }}</span>
         </div>
       </div>
 

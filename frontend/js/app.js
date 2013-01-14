@@ -3,6 +3,31 @@
 
   window.russel_module = angular.module('russel', []);
 
+  $(window).resize(function(e) {
+    var char_size, h, inner, margin, score_size, side, tiles, top_size, w;
+    h = $(window).height();
+    w = $(window).width();
+    console.log(h, w);
+    if (w > h) {
+      w = h;
+    }
+    side = w / 4 * 0.95;
+    inner = side * 0.8;
+    margin = side * 0.1;
+    char_size = inner * 0.8;
+    score_size = inner * 0.2;
+    top_size = inner * 0.6;
+    tiles = $('.tile').css('width', inner).css('height', inner).css('margin', margin);
+    tiles.find('.char').css('font-size', char_size);
+    tiles.find('.score').css('font-size', score_size);
+    tiles.find('.shadow-score').css('font-size', score_size);
+    return $('div.word').css('font-size', top_size);
+  });
+
+  russel_module.controller('TileCtrl', function() {
+    return $(window).trigger('resize');
+  });
+
   russel_module.controller('GridCtrl', function($scope) {
     var debug, in_snake;
     $scope.coord = [void 0, void 0];
@@ -23,18 +48,22 @@
       return $scope.erase();
     };
     $scope.enter = function($event) {
-      var char, elem, tile, x, y;
+      var char, elem, tile, x, x_str, y, y_str;
       if ($event.originalEvent.type === "touchmove") {
         $scope.drawing = true;
       }
       elem = $(document.elementFromPoint($event.pageX, $event.pageY));
       tile = elem.closest('.tile');
       char = tile.find('.char');
-      x = tile.find('.x').text();
-      y = tile.find('.y').text();
-      $scope.coord = [x, y];
-      if ($scope.drawing && x && y) {
-        return $scope.push();
+      x_str = tile.find('#x').text();
+      y_str = tile.find('#y').text();
+      if (x_str && y_str) {
+        x = Number(x_str);
+        y = Number(y_str);
+        $scope.coord = [x, y];
+        if ($scope.drawing) {
+          return $scope.push();
+        }
       }
     };
     in_snake = function(x, y) {
@@ -50,7 +79,13 @@
     $scope.erase = function() {
       return $scope.snake = [];
     };
-    $scope.selected = in_snake;
+    $scope.status = function(x, y) {
+      if (in_snake(x, y)) {
+        return "selected";
+      } else {
+        return "";
+      }
+    };
     $scope.lookup = function(x, y) {
       return $scope.grid[y][x];
     };

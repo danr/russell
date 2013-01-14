@@ -1,6 +1,37 @@
 window.russel_module = angular.module('russel', [])
 
+$(window).resize (e) ->
+    h = $(window).height()
+    w = $(window).width()
+    console.log h, w
+
+    w = h if w > h
+
+    side = w / 4 * 0.95
+    inner = side * 0.8
+    margin = side * 0.1
+
+    char_size = inner * 0.8
+    score_size = inner * 0.2
+
+    top_size = inner * 0.6
+
+    tiles = $('.tile')
+        .css('width',inner)
+        .css('height',inner)
+        .css('margin',margin)
+
+    tiles.find('.char').css('font-size',char_size)
+    tiles.find('.score').css('font-size',score_size)
+    tiles.find('.shadow-score').css('font-size',score_size)
+
+    $('div.word').css('font-size', top_size)
+
+russel_module.controller 'TileCtrl', () ->
+    $(window).trigger 'resize'
+
 russel_module.controller 'GridCtrl', ($scope) ->
+
     $scope.coord = [undefined,undefined]
 
     $scope.drawing = false
@@ -41,13 +72,16 @@ russel_module.controller 'GridCtrl', ($scope) ->
         elem = $(document.elementFromPoint($event.pageX, $event.pageY))
         tile = elem.closest('.tile')
         char = tile.find('.char')
-        x = tile.find('.x').text()
-        y = tile.find('.y').text()
-        # $scope.info = "#{char.text()} #{x} #{y} #{$event.pageX} #{$event.pageY}"
-        $scope.coord = [x,y]
-        if $scope.drawing and x and y
-            # console.log "pushing #{x} #{y}"
-            $scope.push()
+        x_str = tile.find('#x').text()
+        y_str = tile.find('#y').text()
+        if x_str and y_str
+            x = Number(x_str)
+            y = Number(y_str)
+            # $scope.info = "#{char.text()} #{x} #{y} #{$scope.coord}"
+            $scope.coord = [x,y]
+            if $scope.drawing
+                # console.log "pushing #{x} #{y}"
+                $scope.push()
 
     in_snake = (x,y) -> _.some $scope.snake, (e) -> _.isEqual e, [x,y]
 
@@ -57,11 +91,13 @@ russel_module.controller 'GridCtrl', ($scope) ->
 
     $scope.erase = -> $scope.snake = []
 
-    $scope.selected = in_snake
+    $scope.status = (x,y) ->
+        if in_snake x,y
+            "selected"
+        else
+            ""
 
     $scope.lookup = (x,y) -> $scope.grid[y][x]
 
     $scope.word = () -> (_.map $scope.snake, (w) -> $scope.lookup w...).join('')
-
-
 
