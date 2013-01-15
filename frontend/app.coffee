@@ -7,19 +7,24 @@ $(window).resize (e) ->
 
     w = h if w > h
 
-    side = w / 4 * 0.95
+    side = w / 4 * 0.98
     inner = side * 0.8
     margin = side * 0.1
+    border = side * 0.015
+    inner_r = Math.round inner
+    border_r = Math.max 1, Math.round border
+    margin_r = (Math.round margin) - border_r
 
-    char_size = inner * 0.8
-    score_size = inner * 0.2
+    char_size = Math.round(inner * 0.84)
+    score_size = Math.round(inner * 0.2)
 
-    top_size = inner * 0.6
+    top_size = Math.round(inner * 0.6)
 
     tiles = $('.tile')
-        .css('width',inner)
-        .css('height',inner)
-        .css('margin',margin)
+        .css('width',inner_r)
+        .css('height',inner_r)
+        .css('margin',margin_r)
+        .css('border-width',border_r)
 
     tiles.find('.char').css('font-size',char_size)
     tiles.find('.score').css('font-size',score_size)

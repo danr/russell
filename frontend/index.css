@@ -13,11 +13,7 @@ div.selected {
   text-align: center;
   border-style: solid;
   border-color: black;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -o-user-select: none;
-  user-select: none; }
+  cursor: cell; }
 
 span#x {
   display: none; }
@@ -35,7 +31,7 @@ span.score {
 
 span.shadow-score {
   font-family: sans-serif;
-  color: white;
+  opacity: 0;
   vertical-align: top;
   float: left; }
 
@@ -46,4 +42,9 @@ div.container, div.footer {
 
 body, .container {
   margin: 0px;
-  padding: 0px; }
+  padding: 0px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none; }
