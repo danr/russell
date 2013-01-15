@@ -1,14 +1,29 @@
-div.word
+#top
   text-align: center
   font-family: sans-serif
 
 div.row
   display: block
 
-div.selected
-  border-color: #e82
+div.selected, span.selected
+  background: hsl(45,100%,50%)
+  transition: none
+
+div.wrong, span.wrong
+  background: hsl(10,100%,70%)
+  transition: none
+
+div.correct, span.correct
+  background: hsl(90,100%,60%)
+  transition: none
 
 .tile
+  background: #fff
+  transition-property: background
+  transition-duration: .15s
+  transition-delay: .05s
+  transition-timing-function: ease
+
   display: inline-block
   text-align: center
 

@@ -1,14 +1,28 @@
-div.word {
+#top {
   text-align: center;
   font-family: sans-serif; }
 
 div.row {
   display: block; }
 
-div.selected {
-  border-color: #ee8822; }
+div.selected, span.selected {
+  background: #ffbf00;
+  transition: none; }
+
+div.wrong, span.wrong {
+  background: #ff7f66;
+  transition: none; }
+
+div.correct, span.correct {
+  background: #99ff33;
+  transition: none; }
 
 .tile {
+  background: white;
+  transition-property: background;
+  transition-duration: 0.15s;
+  transition-delay: 0.05s;
+  transition-timing-function: ease;
   display: inline-block;
   text-align: center;
   border-style: solid;

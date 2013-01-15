@@ -13,32 +13,33 @@ $(window).resize (e) ->
     TOP_PANE = 0.1
     BOTTOM_PANE = 0.1
 
-    INNER = 0.8
+    INNER = 0.75
     MARGIN = 1 - INNER
     BORDER = 0.015
 
     PANES = 1 + TOP_PANE + BOTTOM_PANE
+
     # Required height is w * PANES, if it is too much, make it less wide
     if h < w * PANES
         w = h / PANES
 
-    top    = Math.round(w * TOP_PANE)
+    top    = Math.floor(w * TOP_PANE)
     center = w
-    bottom = Math.round(w * BOTTOM_PANE)
+    bottom = Math.floor(w * BOTTOM_PANE)
 
-    $('div.container').css('width',Math.round center)
+    $('div.container').css('width',Math.floor center)
 
     # Sides of a tile
-    side = center / 4 * 0.98
+    side = center / 4
     inner = side * INNER
     margin = side * (MARGIN / 2)
     border = side * BORDER
-    inner_r = Math.round inner
-    border_r = Math.max 1, Math.round border
-    margin_r = (Math.round margin) - border_r
+    inner_r = Math.floor inner
+    border_r = Math.max 1, Math.floor border
+    margin_r = (Math.floor margin) - border_r
 
-    char_size = Math.round(inner * 0.84)
-    score_size = Math.round(inner * 0.2)
+    char_size = Math.floor(inner * 0.84)
+    score_size = Math.floor(inner * 0.2)
 
     tiles = $('.tile')
         .css('width',inner_r)
@@ -50,12 +51,13 @@ $(window).resize (e) ->
     tiles.find('.score').css('font-size',score_size)
     tiles.find('.shadow-score').css('font-size',score_size)
 
-    $('div.word').css('font-size', top)
+    $('#top').css('height',top).css('font-size',top)
+    $('#bottom').css('height',bottom).css('font-size',bottom)
 
 russel_module.controller 'TileCtrl', () ->
     $(window).trigger 'resize'
 
-russel_module.controller 'GridCtrl', ($scope) ->
+russel_module.controller 'GridCtrl', ($scope,$timeout) ->
 
     $scope.coord = [undefined,undefined]
 
@@ -66,13 +68,48 @@ russel_module.controller 'GridCtrl', ($scope) ->
     $scope.snake = []
 
     $scope.grid =
-        [ ["E","N","K","N"]
-          ["T","R","A","G"]
-          ["A","P","Å","A"]
-          ["L","S","V","K"]
+        [ "ACKS"
+          "RLIA"
+          "ÄOTR"
+          "NHIE"
         ]
+        #        [ ["E","N","K","N"]
+        #          ["T","R","A","G"]
+        #          ["A","P","Å","A"]
+        #          ["L","S","V","K"]
+        #        ]
 
-    $scope.score = (char) -> 1
+    $scope.score = (char) -> $scope.scores[char]
+
+    $scope.scores =
+        'A': 1
+        'B': 4
+        'C': 8
+        'D': 1
+        'E': 1
+        'F': 4
+        'G': 2
+        'H': 3
+        'I': 1
+        'J': 8
+        'K': 3
+        'L': 1
+        'M': 3
+        'N': 1
+        'O': 2
+        'P': 3
+        'Q': 10
+        'R': 1
+        'S': 1
+        'T': 1
+        'U': 3
+        'V': 4
+        'X': 10
+        'Y': 8
+        'Z': 10
+        'Å': 4
+        'Ä': 4
+        'Ö': 4
 
     debug = () ->
         #    console.log "Drawing: ", $scope.drawing
@@ -108,21 +145,40 @@ russel_module.controller 'GridCtrl', ($scope) ->
                 # console.log "pushing #{x} #{y}"
                 $scope.push()
 
-    in_snake = (x,y) -> _.some $scope.snake, (e) -> _.isEqual e, [x,y]
+    in_snake = (x,y) -> $scope.status(x,y) == "selected"
 
     $scope.push = ->
         if not in_snake $scope.coord...
+            $scope.last_status = "selected"
+            [x,y] = $scope.coord
+            $scope.statuses[x][y] = "selected"
             $scope.snake.push $scope.coord
 
-    $scope.erase = -> $scope.snake = []
+    $scope.last_word = ""
+    $scope.last_status = ""
 
-    $scope.status = (x,y) ->
-        if in_snake x,y
-            "selected"
-        else
-            ""
+    $scope.erase = ->
+        $scope.last_status = _.shuffle(["wrong","correct"])[0]
+        $scope.last_word = $scope.word()
+        for [x,y] in $scope.snake
+            $scope.statuses[x][y] = $scope.last_status
+        $scope.snake = []
+        clear_status = () ->
+            $scope.last_word = ""
+            $scope.last_status = ""
+            for x in [0..3]
+                for y in [0..3]
+                    if $scope.statuses[x][y] != "selected"
+                        $scope.statuses[x][y] = ""
+        $timeout clear_status, 250
+
+    $scope.statuses = (("" for i in [0..3]) for j in [0..3])
+
+    $scope.status = (x,y) -> $scope.statuses[x][y]
 
     $scope.lookup = (x,y) -> $scope.grid[y][x]
 
-    $scope.word = () -> (_.map $scope.snake, (w) -> $scope.lookup w...).join('')
+    $scope.word = () ->
+        snake_word = (_.map $scope.snake, (w) -> $scope.lookup w...).join('')
+        snake_word or $scope.last_word
 

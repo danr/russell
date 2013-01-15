@@ -10,46 +10,77 @@
     console.log(h, w);
     TOP_PANE = 0.1;
     BOTTOM_PANE = 0.1;
-    INNER = 0.8;
+    INNER = 0.75;
     MARGIN = 1 - INNER;
     BORDER = 0.015;
     PANES = 1 + TOP_PANE + BOTTOM_PANE;
     if (h < w * PANES) {
       w = h / PANES;
     }
-    top = Math.round(w * TOP_PANE);
+    top = Math.floor(w * TOP_PANE);
     center = w;
-    bottom = Math.round(w * BOTTOM_PANE);
-    $('div.container').css('width', Math.round(center));
-    side = center / 4 * 0.98;
+    bottom = Math.floor(w * BOTTOM_PANE);
+    $('div.container').css('width', Math.floor(center));
+    side = center / 4;
     inner = side * INNER;
     margin = side * (MARGIN / 2);
     border = side * BORDER;
-    inner_r = Math.round(inner);
-    border_r = Math.max(1, Math.round(border));
-    margin_r = (Math.round(margin)) - border_r;
-    char_size = Math.round(inner * 0.84);
-    score_size = Math.round(inner * 0.2);
+    inner_r = Math.floor(inner);
+    border_r = Math.max(1, Math.floor(border));
+    margin_r = (Math.floor(margin)) - border_r;
+    char_size = Math.floor(inner * 0.84);
+    score_size = Math.floor(inner * 0.2);
     tiles = $('.tile').css('width', inner_r).css('height', inner_r).css('margin', margin_r).css('border-width', border_r);
     tiles.find('.char').css('font-size', char_size);
     tiles.find('.score').css('font-size', score_size);
     tiles.find('.shadow-score').css('font-size', score_size);
-    return $('div.word').css('font-size', top);
+    $('#top').css('height', top).css('font-size', top);
+    return $('#bottom').css('height', bottom).css('font-size', bottom);
   });
 
   russel_module.controller('TileCtrl', function() {
     return $(window).trigger('resize');
   });
 
-  russel_module.controller('GridCtrl', function($scope) {
-    var debug, in_snake;
+  russel_module.controller('GridCtrl', function($scope, $timeout) {
+    var debug, i, in_snake, j;
     $scope.coord = [void 0, void 0];
     $scope.drawing = false;
     $scope.info = "";
     $scope.snake = [];
-    $scope.grid = [["E", "N", "K", "N"], ["T", "R", "A", "G"], ["A", "P", "Å", "A"], ["L", "S", "V", "K"]];
+    $scope.grid = ["ACKS", "RLIA", "ÄOTR", "NHIE"];
     $scope.score = function(char) {
-      return 1;
+      return $scope.scores[char];
+    };
+    $scope.scores = {
+      'A': 1,
+      'B': 4,
+      'C': 8,
+      'D': 1,
+      'E': 1,
+      'F': 4,
+      'G': 2,
+      'H': 3,
+      'I': 1,
+      'J': 8,
+      'K': 3,
+      'L': 1,
+      'M': 3,
+      'N': 1,
+      'O': 2,
+      'P': 3,
+      'Q': 10,
+      'R': 1,
+      'S': 1,
+      'T': 1,
+      'U': 3,
+      'V': 4,
+      'X': 10,
+      'Y': 8,
+      'Z': 10,
+      'Å': 4,
+      'Ä': 4,
+      'Ö': 4
     };
     debug = function() {};
     $scope.down = function() {
@@ -80,32 +111,79 @@
       }
     };
     in_snake = function(x, y) {
-      return _.some($scope.snake, function(e) {
-        return _.isEqual(e, [x, y]);
-      });
+      return $scope.status(x, y) === "selected";
     };
     $scope.push = function() {
+      var x, y, _ref;
       if (!in_snake.apply(null, $scope.coord)) {
+        $scope.last_status = "selected";
+        _ref = $scope.coord, x = _ref[0], y = _ref[1];
+        $scope.statuses[x][y] = "selected";
         return $scope.snake.push($scope.coord);
       }
     };
+    $scope.last_word = "";
+    $scope.last_status = "";
     $scope.erase = function() {
-      return $scope.snake = [];
-    };
-    $scope.status = function(x, y) {
-      if (in_snake(x, y)) {
-        return "selected";
-      } else {
-        return "";
+      var clear_status, x, y, _i, _len, _ref, _ref1;
+      $scope.last_status = _.shuffle(["wrong", "correct"])[0];
+      $scope.last_word = $scope.word();
+      _ref = $scope.snake;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        _ref1 = _ref[_i], x = _ref1[0], y = _ref1[1];
+        $scope.statuses[x][y] = $scope.last_status;
       }
+      $scope.snake = [];
+      clear_status = function() {
+        var _j, _results;
+        $scope.last_word = "";
+        $scope.last_status = "";
+        _results = [];
+        for (x = _j = 0; _j <= 3; x = ++_j) {
+          _results.push((function() {
+            var _k, _results1;
+            _results1 = [];
+            for (y = _k = 0; _k <= 3; y = ++_k) {
+              if ($scope.statuses[x][y] !== "selected") {
+                _results1.push($scope.statuses[x][y] = "");
+              } else {
+                _results1.push(void 0);
+              }
+            }
+            return _results1;
+          })());
+        }
+        return _results;
+      };
+      return $timeout(clear_status, 250);
+    };
+    $scope.statuses = (function() {
+      var _i, _results;
+      _results = [];
+      for (j = _i = 0; _i <= 3; j = ++_i) {
+        _results.push((function() {
+          var _j, _results1;
+          _results1 = [];
+          for (i = _j = 0; _j <= 3; i = ++_j) {
+            _results1.push("");
+          }
+          return _results1;
+        })());
+      }
+      return _results;
+    })();
+    $scope.status = function(x, y) {
+      return $scope.statuses[x][y];
     };
     $scope.lookup = function(x, y) {
       return $scope.grid[y][x];
     };
     return $scope.word = function() {
-      return (_.map($scope.snake, function(w) {
+      var snake_word;
+      snake_word = (_.map($scope.snake, function(w) {
         return $scope.lookup.apply($scope, w);
       })).join('');
+      return snake_word || $scope.last_word;
     };
   });
 
