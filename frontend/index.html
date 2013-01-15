@@ -28,6 +28,8 @@
         <span ng-class="last_status">&nbsp;{{ word() }}&nbsp;</span>
       </div>
 
+      <div id="top-space"></div>
+
       <div class="row" ng-init="y = $index" ng-repeat="row in grid">
         <div class="tile" ng-init="x = $index" ng-repeat="col in row"
           ng-controller="TileCtrl"
@@ -39,6 +41,8 @@
           <span id="y">{{ y }}</span>
         </div>
       </div>
+
+      <div id="bottom-space"></div>
 
       <div id="bottom">
         {{ info }}

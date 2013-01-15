@@ -27,6 +27,10 @@ $(window).resize (e) ->
     center = w
     bottom = Math.floor(w * BOTTOM_PANE)
 
+    space = Math.floor ((h - top - center - bottom) / 2)
+
+    $('#top-space,#bottom-space').css('height',space)
+
     $('div.container').css('width',Math.floor center)
 
     # Sides of a tile
@@ -37,6 +41,7 @@ $(window).resize (e) ->
     inner_r = Math.floor inner
     border_r = Math.max 1, Math.floor border
     margin_r = (Math.floor margin) - border_r
+
 
     char_size = Math.floor(inner * 0.84)
     score_size = Math.floor(inner * 0.2)
@@ -147,8 +152,14 @@ russel_module.controller 'GridCtrl', ($scope,$timeout) ->
 
     in_snake = (x,y) -> $scope.status(x,y) == "selected"
 
+    neighbour = ([x0,y0],[x1,y1]) ->
+        Math.max(Math.abs(x0 - x1),Math.abs(y0 - y1)) <= 1
+
     $scope.push = ->
-        if not in_snake $scope.coord...
+        empty = _.isEmpty $scope.snake
+        is_new = not (in_snake $scope.coord...)
+        adjacent = empty or neighbour $scope.coord, _.last $scope.snake
+        if empty or (is_new and adjacent)
             $scope.last_status = "selected"
             [x,y] = $scope.coord
             $scope.statuses[x][y] = "selected"
@@ -170,7 +181,7 @@ russel_module.controller 'GridCtrl', ($scope,$timeout) ->
                 for y in [0..3]
                     if $scope.statuses[x][y] != "selected"
                         $scope.statuses[x][y] = ""
-        $timeout clear_status, 250
+        $timeout clear_status, 300
 
     $scope.statuses = (("" for i in [0..3]) for j in [0..3])
 

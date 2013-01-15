@@ -21,7 +21,6 @@ div.correct, span.correct {
   background: white;
   transition-property: background;
   transition-duration: 0.15s;
-  transition-delay: 0.05s;
   transition-timing-function: ease;
   display: inline-block;
   text-align: center;

@@ -4,7 +4,7 @@
   window.russel_module = angular.module('russel', []);
 
   $(window).resize(function(e) {
-    var BORDER, BOTTOM_PANE, INNER, MARGIN, PANES, TOP_PANE, border, border_r, bottom, center, char_size, h, inner, inner_r, margin, margin_r, score_size, side, tiles, top, w;
+    var BORDER, BOTTOM_PANE, INNER, MARGIN, PANES, TOP_PANE, border, border_r, bottom, center, char_size, h, inner, inner_r, margin, margin_r, score_size, side, space, tiles, top, w;
     h = $(window).height();
     w = $(window).width();
     console.log(h, w);
@@ -20,6 +20,8 @@
     top = Math.floor(w * TOP_PANE);
     center = w;
     bottom = Math.floor(w * BOTTOM_PANE);
+    space = Math.floor((h - top - center - bottom) / 2);
+    $('#top-space,#bottom-space').css('height', space);
     $('div.container').css('width', Math.floor(center));
     side = center / 4;
     inner = side * INNER;
@@ -43,7 +45,7 @@
   });
 
   russel_module.controller('GridCtrl', function($scope, $timeout) {
-    var debug, i, in_snake, j;
+    var debug, i, in_snake, j, neighbour;
     $scope.coord = [void 0, void 0];
     $scope.drawing = false;
     $scope.info = "";
@@ -113,9 +115,18 @@
     in_snake = function(x, y) {
       return $scope.status(x, y) === "selected";
     };
+    neighbour = function(_arg, _arg1) {
+      var x0, x1, y0, y1;
+      x0 = _arg[0], y0 = _arg[1];
+      x1 = _arg1[0], y1 = _arg1[1];
+      return Math.max(Math.abs(x0 - x1), Math.abs(y0 - y1)) <= 1;
+    };
     $scope.push = function() {
-      var x, y, _ref;
-      if (!in_snake.apply(null, $scope.coord)) {
+      var adjacent, empty, is_new, x, y, _ref;
+      empty = _.isEmpty($scope.snake);
+      is_new = !(in_snake.apply(null, $scope.coord));
+      adjacent = empty || neighbour($scope.coord, _.last($scope.snake));
+      if (empty || (is_new && adjacent)) {
         $scope.last_status = "selected";
         _ref = $scope.coord, x = _ref[0], y = _ref[1];
         $scope.statuses[x][y] = "selected";
@@ -155,7 +166,7 @@
         }
         return _results;
       };
-      return $timeout(clear_status, 250);
+      return $timeout(clear_status, 300);
     };
     $scope.statuses = (function() {
       var _i, _results;
