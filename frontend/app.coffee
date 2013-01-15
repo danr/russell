@@ -31,6 +31,8 @@ $(window).resize (e) ->
 
     $('#top-space,#bottom-space').css('height',space)
 
+    console.log $('.oneThird').css('width',Math.floor((w * 0.9)/3))
+
     $('div.container').css('width',Math.floor center)
 
     # Sides of a tile
@@ -56,8 +58,8 @@ $(window).resize (e) ->
     tiles.find('.score').css('font-size',score_size)
     tiles.find('.shadow-score').css('font-size',score_size)
 
-    $('#top').css('height',top).css('font-size',top)
-    $('#bottom').css('height',bottom).css('font-size',bottom)
+    $('#top').css('height',top).css('font-size',Math.round(top * 0.9))
+    $('#bottom').css('height',bottom).css('font-size',Math.round(bottom * 0.9))
 
 russel_module.controller 'TileCtrl', () ->
     $(window).trigger 'resize'
@@ -65,6 +67,9 @@ russel_module.controller 'TileCtrl', () ->
 russel_module.controller 'GridCtrl', ($scope,$timeout) ->
 
     $scope.coord = [undefined,undefined]
+
+    $scope.score = 0
+    $scope.words = 0
 
     $scope.drawing = false
 
@@ -84,7 +89,7 @@ russel_module.controller 'GridCtrl', ($scope,$timeout) ->
         #          ["L","S","V","K"]
         #        ]
 
-    $scope.score = (char) -> $scope.scores[char]
+    $scope.char_score = (char) -> $scope.scores[char]
 
     $scope.scores =
         'A': 1
@@ -174,6 +179,12 @@ russel_module.controller 'GridCtrl', ($scope,$timeout) ->
         for [x,y] in $scope.snake
             $scope.statuses[x][y] = $scope.last_status
         $scope.snake = []
+        if $scope.last_status == "correct"
+            $scope.words++
+            new_score = 0
+            for c in $scope.last_word
+                new_score += $scope.char_score c
+            $scope.score += new_score
         clear_status = () ->
             $scope.last_word = ""
             $scope.last_status = ""

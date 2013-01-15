@@ -22,6 +22,7 @@
     bottom = Math.floor(w * BOTTOM_PANE);
     space = Math.floor((h - top - center - bottom) / 2);
     $('#top-space,#bottom-space').css('height', space);
+    console.log($('.oneThird').css('width', Math.floor((w * 0.9) / 3)));
     $('div.container').css('width', Math.floor(center));
     side = center / 4;
     inner = side * INNER;
@@ -36,8 +37,8 @@
     tiles.find('.char').css('font-size', char_size);
     tiles.find('.score').css('font-size', score_size);
     tiles.find('.shadow-score').css('font-size', score_size);
-    $('#top').css('height', top).css('font-size', top);
-    return $('#bottom').css('height', bottom).css('font-size', bottom);
+    $('#top').css('height', top).css('font-size', Math.round(top * 0.9));
+    return $('#bottom').css('height', bottom).css('font-size', Math.round(bottom * 0.9));
   });
 
   russel_module.controller('TileCtrl', function() {
@@ -47,11 +48,13 @@
   russel_module.controller('GridCtrl', function($scope, $timeout) {
     var debug, i, in_snake, j, neighbour;
     $scope.coord = [void 0, void 0];
+    $scope.score = 0;
+    $scope.words = 0;
     $scope.drawing = false;
     $scope.info = "";
     $scope.snake = [];
     $scope.grid = ["ACKS", "RLIA", "ÄOTR", "NHIE"];
-    $scope.score = function(char) {
+    $scope.char_score = function(char) {
       return $scope.scores[char];
     };
     $scope.scores = {
@@ -136,7 +139,7 @@
     $scope.last_word = "";
     $scope.last_status = "";
     $scope.erase = function() {
-      var clear_status, x, y, _i, _len, _ref, _ref1;
+      var c, clear_status, new_score, x, y, _i, _j, _len, _len1, _ref, _ref1, _ref2;
       $scope.last_status = _.shuffle(["wrong", "correct"])[0];
       $scope.last_word = $scope.word();
       _ref = $scope.snake;
@@ -145,16 +148,26 @@
         $scope.statuses[x][y] = $scope.last_status;
       }
       $scope.snake = [];
+      if ($scope.last_status === "correct") {
+        $scope.words++;
+        new_score = 0;
+        _ref2 = $scope.last_word;
+        for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+          c = _ref2[_j];
+          new_score += $scope.char_score(c);
+        }
+        $scope.score += new_score;
+      }
       clear_status = function() {
-        var _j, _results;
+        var _k, _results;
         $scope.last_word = "";
         $scope.last_status = "";
         _results = [];
-        for (x = _j = 0; _j <= 3; x = ++_j) {
+        for (x = _k = 0; _k <= 3; x = ++_k) {
           _results.push((function() {
-            var _k, _results1;
+            var _l, _results1;
             _results1 = [];
-            for (y = _k = 0; _k <= 3; y = ++_k) {
+            for (y = _l = 0; _l <= 3; y = ++_l) {
               if ($scope.statuses[x][y] !== "selected") {
                 _results1.push($scope.statuses[x][y] = "");
               } else {

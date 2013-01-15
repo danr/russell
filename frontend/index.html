@@ -34,9 +34,9 @@
         <div class="tile" ng-init="x = $index" ng-repeat="col in row"
           ng-controller="TileCtrl"
           ng-class="status(x,y)">
-          <span class="shadow-score">{{ score(col) }}</span>
+          <span class="shadow-score">{{ char_score(col) }}</span>
           <span class="char">{{ col }}</span>
-          <span class="score">{{ score(col) }}</span>
+          <span class="score">{{ char_score(col) }}</span>
           <span id="x">{{ x }}</span>
           <span id="y">{{ y }}</span>
         </div>
@@ -45,7 +45,9 @@
       <div id="bottom-space"></div>
 
       <div id="bottom">
-        {{ info }}
+        <div class="oneThird" style="display:inline-block">{{ time }}&nbsp;</div>
+        <div class="oneThird" style="display:inline-block; text-align:center;">&nbsp;{{ score }}</div>
+        <div class="oneThird" style="display:inline-block; text-align:right;">&nbsp;{{ words }}</div>
       </div>
 
     </div>
