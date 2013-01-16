@@ -1,3 +1,6 @@
 [submodule "frontend/lib/angular-mobile"]
 	path = frontend/lib/angular-mobile
 	url = https://github.com/tigbro/jquery-mobile-angular-adapter.git
+[submodule "frontend/lib/underscore"]
+	path = frontend/lib/underscore
+	url = https://github.com/documentcloud/underscore.git
