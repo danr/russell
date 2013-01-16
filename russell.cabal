@@ -15,7 +15,9 @@ executable russell
   hs-source-dirs:    backend
   build-depends:
         base ==4.6.*
+      , containers
       , text
+      , stm
       , word8
       , bytestring
       , aeson

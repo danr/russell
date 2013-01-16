@@ -1,8 +1,14 @@
-russell_module.controller 'GridCtrl', ($scope,snake) ->
+russell_module.controller 'GridCtrl', ($scope,$http,snake) ->
 
     $scope.user = ""
 
     $scope.logged_in = false
+
+    $scope.login = () ->
+        $http.get("http://localhost:3000/round").success (res) ->
+            $scope.grid = res.round_grid
+            $scope.scores = _.object res.round_char_scores
+            $scope.logged_in = true
 
     $scope.coord = [undefined,undefined]
 
@@ -13,42 +19,9 @@ russell_module.controller 'GridCtrl', ($scope,snake) ->
 
     $scope.info = ""
 
-    $scope.grid =
-        [ "ACKS"
-          "RLIA"
-          "ÄOTR"
-          "NHIE"
-        ]
+    $scope.grid = [[]]
 
-    $scope.scores =
-        'A': 1
-        'B': 4
-        'C': 8
-        'D': 1
-        'E': 1
-        'F': 4
-        'G': 2
-        'H': 3
-        'I': 1
-        'J': 8
-        'K': 3
-        'L': 1
-        'M': 3
-        'N': 1
-        'O': 2
-        'P': 3
-        'Q': 10
-        'R': 1
-        'S': 1
-        'T': 1
-        'U': 3
-        'V': 4
-        'X': 10
-        'Y': 8
-        'Z': 10
-        'Å': 4
-        'Ä': 4
-        'Ö': 4
+    $scope.scores = {}
 
     $scope.char_score = (char) -> $scope.scores[char]
 

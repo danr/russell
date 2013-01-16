@@ -39,7 +39,7 @@ russell_module.factory 'snake', ($http, $q, $timeout) ->
             $timeout clear_status, 300
 
         post = $http.post "http://localhost:3000/submit/",
-            snake: snake
+            snake: snake_copy
             user: user
 
         post.success handle_success
