@@ -1,4 +1,4 @@
-russell_module.factory 'snake', ($http, $q, $timeout) ->
+russell_module.factory 'snake', ($http, $q, $timeout, make_url) ->
 
     snake = []
     statuses = (("" for i in [0..3]) for j in [0..3])
@@ -38,7 +38,7 @@ russell_module.factory 'snake', ($http, $q, $timeout) ->
                 upd_status new_status, "", snake_copy
             $timeout clear_status, 300
 
-        post = $http.post "http://localhost:3000/submit/",
+        post = $http.post (make_url "/submit/"),
             snake: snake_copy
             user: user
 

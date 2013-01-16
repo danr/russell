@@ -59,3 +59,4 @@ $(window).resize (e) ->
     $('#top').css('height',top).css('font-size',Math.round(top * 0.9))
     $('#bottom').css('height',bottom).css('font-size',Math.round(bottom * 0.9))
 
+$(window).trigger 'resize'

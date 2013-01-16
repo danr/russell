@@ -1,11 +1,11 @@
-russell_module.controller 'GridCtrl', ($scope,$http,snake) ->
+russell_module.controller 'GridCtrl', ($scope, $http, snake, make_url) ->
 
     $scope.user = ""
 
     $scope.logged_in = false
 
     $scope.login = () ->
-        $http.get("http://localhost:3000/round").success (res) ->
+        $http.get(make_url "/round/").success (res) ->
             $scope.grid = res.round_grid
             $scope.scores = _.object res.round_char_scores
             $scope.logged_in = true
