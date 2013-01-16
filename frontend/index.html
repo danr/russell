@@ -15,12 +15,20 @@
       Russells ordorm
     </title>
   </head>
-  <body ng-controller="GridCtrl"
+  <body ng-controller="GridCtrl">
+
+    <div class="container" ng-hide="logged_in">
+      <div class="login">
+        <h3>Russells ordorm</h3>
+        <input type="text" ng-model="user">
+        <a ng-click="logged_in = true">Play!</a>
+      </div>
+    </div>
+
+    <div class="container" ng-show="logged_in"
       ngm-vmouseup="up()"
       ng-mousedown="down()"
       ngm-vmousemove="enter($event)">
-
-    <div class="container">
 
       <div id="top">
         <span ng-class="last_status">&nbsp;{{ word() }}&nbsp;</span>

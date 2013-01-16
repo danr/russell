@@ -1,4 +1,8 @@
-russell_module.controller 'GridCtrl', ($scope,$timeout,snake) ->
+russell_module.controller 'GridCtrl', ($scope,snake) ->
+
+    $scope.user = ""
+
+    $scope.logged_in = false
 
     $scope.coord = [undefined,undefined]
 
@@ -57,7 +61,7 @@ russell_module.controller 'GridCtrl', ($scope,$timeout,snake) ->
         $scope.drawing = false
         $scope.last_word = $scope.word()
         $scope.last_status = "submitted"
-        snake.erase().then (res) ->
+        snake.erase($scope.user).then (res) ->
             $scope.last_status = res.new_status
             $scope.score = Math.max res.score, $scope.score
             $scope.words = Math.max res.words, $scope.words

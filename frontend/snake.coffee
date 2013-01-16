@@ -19,7 +19,7 @@ russell_module.factory 'snake', ($http, $q, $timeout) ->
 
     word: (lookup) -> (_.map snake, lookup).join('')
 
-    erase: ->
+    erase: (user) ->
         for [x,y] in snake
             statuses[x][y] = "submitted"
 
@@ -38,7 +38,10 @@ russell_module.factory 'snake', ($http, $q, $timeout) ->
                 upd_status new_status, "", snake_copy
             $timeout clear_status, 300
 
-        post = $http.post("http://localhost:3000/submit/", snake: snake)
+        post = $http.post "http://localhost:3000/submit/",
+            snake: snake
+            user: user
+
         post.success handle_success
         post.error -> $timeout (-> handle_success do ->
             correct = _.random 0, 1

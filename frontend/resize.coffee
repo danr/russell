@@ -29,7 +29,9 @@ $(window).resize (e) ->
 
     $('.oneThird').css('width',Math.floor((w * 0.9)/3))
 
-    $('div.container').css('width',Math.floor center)
+    $('div.container')
+        .css('width',Math.floor center)
+        .css('height',Math.floor h)
 
     # Sides of a tile
     side = center / 4
