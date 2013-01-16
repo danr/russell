@@ -1,4 +1,4 @@
-window.russel_module = angular.module('russel', [])
+window.russell_module = angular.module('russell', [])
 
 $(window).resize (e) ->
 
@@ -61,10 +61,10 @@ $(window).resize (e) ->
     $('#top').css('height',top).css('font-size',Math.round(top * 0.9))
     $('#bottom').css('height',bottom).css('font-size',Math.round(bottom * 0.9))
 
-russel_module.controller 'TileCtrl', () ->
+russell_module.controller 'TileCtrl', () ->
     $(window).trigger 'resize'
 
-russel_module.controller 'GridCtrl', ($scope,$timeout) ->
+russell_module.controller 'GridCtrl', ($scope,$timeout) ->
 
     $scope.coord = [undefined,undefined]
 
