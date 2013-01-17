@@ -7,6 +7,7 @@ import Data.Monoid (mconcat)
 
 import Control.Monad.IO.Class (liftIO)
 
+import Control.Applicative hiding ((<|>))
 import Control.Monad.Random
 import Control.Monad.Random.Class
 import Control.Monad
@@ -23,6 +24,14 @@ import GHC.Generics
 import Data.Maybe
 import Data.Map (Map)
 import qualified Data.Map as M
+import Data.HashSet (HashSet)
+import qualified Data.HashSet as S
+
+import Data.Text.Lazy (Text)
+import qualified Data.Text.Lazy as T
+import qualified Data.Text.Lazy.IO as T
+
+import Grid
 
 data Submit = Submit
     { snake :: [[Int]]
@@ -41,8 +50,6 @@ data Response = Response
 
 instance ToJSON Response
 
-type Grid = [[Char]]
-
 data Round = Round
     { round_grid        :: Grid
     , round_char_scores :: [(Char,Int)]
@@ -54,7 +61,6 @@ instance ToJSON Round
 submitSnake :: Submit -> Snake
 submitSnake = map (\[x,y] -> (x,y)) . snake
 
-type Coord = (Int,Int)
 type Snake = [Coord]
 
 data User = User
@@ -80,9 +86,11 @@ probmap = M.fromList $ zip [1..]
     $ concatMap (\(c,v) -> replicate (550 - v * v * v) c)
     $ M.toList char_scores
 
+{-
 newGrid :: IO Grid
 newGrid = replicateM 4 $ replicateM 4
         $ (probmap M.!) `fmap` getRandomR (0 :: Int,M.size probmap)
+        -}
 
 userPlaced :: String -> String -> TVar UserDB -> STM Bool
 userPlaced name word db = (maybe False ((word `elem`) . user_history)
@@ -103,12 +111,34 @@ userMod name mod_score mod_history db = do
     modifyTVar db (M.insert name updated)
     return (score',words')
 
+readSaldo :: IO [Text]
+readSaldo
+    = filter ((>1) . T.length) . map T.toUpper . T.lines
+   <$> T.readFile "backend/saldom-stripped"
+
+readSaldoWordsAndSet :: IO ([Text],HashSet Text)
+readSaldoWordsAndSet = do
+
+    saldo_list <- readSaldo
+
+    putStrLn $ "Read " ++ show (length saldo_list) ++ " words."
+
+    let ok_len x = 5 <= x && x <= 9
+        good_words = filter (ok_len . T.length) (saldo_list)
+
+    let saldo_set = S.fromList saldo_list
+
+    return (good_words,saldo_set)
+
 main :: IO ()
 main = do
 
-    print probmap
+    (good_words,saldo_set) <- readSaldoWordsAndSet
 
-    grid <- newGrid
+    print $ map (`S.member` saldo_set)
+            ["FEST","VAG","ANOR","ROR","ABCD"]
+
+    grid <- makeGrid good_words
 
     print grid
 
@@ -133,12 +163,14 @@ main = do
 
         post "/submit" $ do
             Just submit <- jsonData
-            let word = map (\(x,y) -> grid !! y !! x) (submitSnake submit)
+            let word = map (grid `at`) (submitSnake submit)
                 value = sum (map (char_scores M.!) word)
             res <- liftIO $ atomically $ do
                 let name = user submit
-                ok <- not `fmap` userPlaced name word db
-                let (mod_score,mod_history)
+                user_placed <- userPlaced name word db
+                let word_ok = S.member (T.pack word) saldo_set
+                    ok = not user_placed && word_ok
+                    (mod_score,mod_history)
                         | ok        = ((+ value),(word:))
                         | otherwise = (id,id)
                 uncurry (Response ok) `fmap`

@@ -17,6 +17,7 @@ executable russell
         base ==4.6.*
       , transformers
       , containers
+      , unordered-containers
       , MonadRandom
       , text
       , stm
