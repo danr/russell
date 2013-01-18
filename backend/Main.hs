@@ -35,6 +35,10 @@ import qualified Data.Text.Lazy as T
 import qualified Data.Text.Lazy.IO as T
 import qualified Data.Text.Lazy.Read as T
 
+import System.Environment
+import Control.Concurrent
+import Data.Time.Clock
+
 import Grid
 
 data Submit = Submit
@@ -49,18 +53,27 @@ data Response = Response
     { correct :: Bool
     , score   :: Int
     , words   :: Int
+    , resp_timeout :: Integer
     }
   deriving Generic
 
 instance ToJSON Response
 
-data Round = Round
-    { round_grid        :: Grid
-    , round_char_scores :: [(Char,Int)]
+data GridResponse = GridResponse
+    { grid_response    :: Grid
+    , grid_char_scores :: [(Char,Int)]
+    , grid_timeout     :: Integer
     }
   deriving Generic
 
-instance ToJSON Round
+data SummaryResponse = SummaryResponse
+    { summary_scores  :: [(String,User)]
+    , summary_timeout :: Integer
+    }
+  deriving Generic
+
+instance ToJSON SummaryResponse
+instance ToJSON GridResponse
 
 submitSnake :: Submit -> Snake
 submitSnake = map (\[x,y] -> (x,y)) . snake
@@ -70,8 +83,11 @@ type Snake = [Coord]
 data User = User
     { user_score :: Int
     , user_words :: Int
-    , user_history :: [String]
+    , user_history :: [(Text,Int)]
     }
+  deriving Generic
+
+instance ToJSON User
 
 emptyUser :: User
 emptyUser = User
@@ -82,14 +98,15 @@ emptyUser = User
 
 type UserDB = Map String User
 
-newUserDB :: IO (TVar UserDB)
-newUserDB = newTVarIO M.empty
+emptyUserDB :: UserDB
+emptyUserDB = M.empty
 
-userPlaced :: String -> String -> TVar UserDB -> STM Bool
-userPlaced name word db =
-    maybe False ((word `elem`) . user_history) . M.lookup name <$> readTVar db
+userPlaced :: String -> Text -> TVar UserDB -> STM Bool
+userPlaced name word db
+    = maybe False ((word `elem`) . map fst . user_history)
+    . M.lookup name <$> readTVar db
 
-userMod :: String -> (Int -> Int) -> ([String] -> [String])
+userMod :: String -> (Int -> Int) -> ([(Text,Int)] -> [(Text,Int)])
         -> TVar UserDB -> STM (Int,Int)
 userMod name mod_score mod_history db = do
     User{..} <- fromMaybe emptyUser . M.lookup name <$> readTVar db
@@ -115,25 +132,74 @@ readTrigrams = HM.fromList . map frequency . T.lines <$>
     frequency l = (T.tail w,either error fst (T.decimal n))
       where (n,w) = T.break (== ' ') l
 
+us :: Int
+us = 1000 * 1000
+
+play_length :: Integer
+play_length = 60
+
+score_length :: Integer
+score_length = 30
+
+diffToMs :: NominalDiffTime -> Integer
+diffToMs = truncate . (precision *) . toRational
+  where precision = 1000
+
 main :: IO ()
 main = do
+
+    args <- getArgs
 
     lexicon <- readLexicon
 
     trigrams <- readTrigrams
 
-    print $ map (`HS.member` lexicon) ["FEST","VAG","ANOR","ROR","ABCD"]
+    when (args == ["test"]) $
+        print $ map (`HS.member` lexicon) ["FEST","VAG","ANOR","ROR","ABCD"]
 
-    grid <- makeGrid trigrams
+    when (args == ["grids"]) $ forever $ do
+        g <- makeGrid trigrams
+        T.putStrLn ""
+        mapM_ T.putStrLn g
 
-    mapM_ T.putStrLn grid
+    grid_var <- newTVarIO Nothing
+    scores_var <- newTVarIO []
 
-    let round = Round
-            { round_grid = grid
-            , round_char_scores = M.toList char_scores
-            }
+    next_change <- newTVarIO =<< getCurrentTime
 
-    db <- newUserDB
+    db <- newTVarIO emptyUserDB
+
+    let play_mode_stm = maybe False (const True) <$> readTVar grid_var
+
+        play_mode = atomically play_mode_stm
+
+        calc_next_change = do
+            next <- atomically (readTVar next_change)
+            t <- getCurrentTime
+            let ms = diffToMs (diffUTCTime next t)
+            print $ "ms to next change: " ++ show ms
+            return ms
+
+    forkIO $ forever $ do
+        p <- play_mode
+        let delay = if p then play_length else score_length
+        t0 <- getCurrentTime
+        let next = addUTCTime (fromInteger delay) t0
+        atomically $ writeTVar next_change next
+        putStrLn $ "Play mode: " ++ show p
+        threadDelay (fromInteger delay * 1000000)
+        case p of
+            -- Go from play to score
+            True -> atomically $ do
+                writeTVar grid_var Nothing
+                scores <- M.toList <$> readTVar db
+                writeTVar scores_var scores
+            -- Go from score to play
+            False -> do
+                g <- makeGrid trigrams
+                atomically $ do
+                    writeTVar grid_var (Just g)
+                    writeTVar db emptyUserDB
 
     scotty 3000 $ do
 
@@ -145,23 +211,57 @@ main = do
                 ["html", "js", "css", "jpg", "txt"])
             ] <|> only (zip ["","/"] (repeat "frontend/index.html"))
 
-        get "/round" $ json round
+        get "/grid" $ do
+            g <- liftIO $ atomically $ do
+                mg <- readTVar grid_var
+                case mg of
+                    Nothing -> retry
+                    Just g' -> return g'
+            nc <- liftIO $ calc_next_change
+            json $ GridResponse
+                { grid_response    = g
+                , grid_char_scores = M.toList char_scores
+                , grid_timeout     = nc
+                }
+
+        get "/summary" $ do
+            scores <- liftIO $ atomically $ do
+                pm <- play_mode_stm
+                when pm retry
+                readTVar scores_var
+            nc <- liftIO calc_next_change
+            json $ SummaryResponse
+                { summary_scores  = scores
+                , summary_timeout = nc
+                }
 
         post "/submit" $ do
-            Just submit <- jsonData
-            let word = map (grid `at`) (submitSnake submit)
-                value = sum (map (char_scores M.!) word)
-            res <- liftIO $ atomically $ do
-                let name = user submit
-                user_placed <- userPlaced name word db
-                let word_ok = T.pack word `HS.member` lexicon
-                    ok = not user_placed && word_ok
-                    (mod_score,mod_history)
-                        | ok        = ((+ value),(word:))
-                        | otherwise = (id,id)
-                uncurry (Response ok) <$>
-                    userMod name mod_score mod_history db
-            json res
+            mg <- liftIO $ atomically $ readTVar grid_var
+            case mg of
+                Nothing -> json ()
+                Just grid -> do
+                    Just submit <- jsonData
+                    let word = map (grid `at`) (submitSnake submit)
+                        value = sum (map (char_scores M.!) word)
+                        word_text = T.pack word
+                    res <- liftIO $ do
+                        (ok,(score',words')) <- atomically $ do
+                            let name = user submit
+                            user_placed <- userPlaced name word_text db
+                            let word_ok = word_text `HS.member` lexicon
+                                ok = not user_placed && word_ok
+                                (mod_score,mod_history)
+                                    | ok        = ((+ value),((word_text,value):))
+                                    | otherwise = (id,id)
+                            (,) ok <$> userMod name mod_score mod_history db
+                        nc <- calc_next_change
+                        return $ Response
+                            { correct      = ok
+                            , score        = score'
+                            , words        = words'
+                            , resp_timeout = nc
+                            }
+                    json res
 
 char_scores :: Map Char Int
 char_scores = M.fromList

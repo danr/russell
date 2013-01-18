@@ -43,11 +43,6 @@ russell_module.factory 'snake', ($http, $q, $timeout, make_url) ->
             user: user
 
         post.success handle_success
-        post.error -> $timeout (-> handle_success do ->
-            correct = _.random 0, 1
-            correct: 1 == correct
-            score: correct * _.random 0, 1000
-            words: correct * _.random 0, 100), 300
 
         answer.promise
 

@@ -21,6 +21,7 @@ executable russell
       , MonadRandom
       , text
       , stm
+      , time
       , word8
       , bytestring
       , aeson

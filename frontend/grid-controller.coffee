@@ -1,23 +1,35 @@
 russell_module.controller 'GridCtrl', ($scope, $http, snake, make_url) ->
 
-    $scope.user = ""
+    console.log $scope
 
-    $scope.logged_in = false
+    $scope.$watch 'logged_in', (lg) ->
+        if lg
+            $scope.get_grids()
 
-    $scope.login = () ->
-        $http.get(make_url "/round/").success (res) ->
-            $scope.grid = res.round_grid
+    $scope.get_grids = () ->
+        console.log "Grid: getting grids"
+        $http.get(make_url "/grid/").success (res) ->
+            console.log "Grid: ", res
+            $scope.reset()
+            $scope.grid = res.grid_response
             $scope.scores = _.object res.round_char_scores
-            $scope.logged_in = true
+            $scope.$parent.play_mode = true
+            $scope.$watch 'play_mode', () ->
+                if not $scope.play_mode
+                    $scope.get_grids()
 
-    $scope.coord = [undefined,undefined]
+    $scope.reset = () ->
+        $scope.coord = [undefined,undefined]
 
-    $scope.score = 0
-    $scope.words = 0
+        $scope.score = 0
+        $scope.words = 0
 
-    $scope.drawing = false
+        $scope.drawing = false
+        $scope.last_status = ""
 
-    $scope.info = ""
+        $scope.status = snake.status
+
+        $scope.info = ""
 
     $scope.grid = [[]]
 
@@ -55,10 +67,6 @@ russell_module.controller 'GridCtrl', ($scope, $http, snake, make_url) ->
                 snake.push($scope.coord)
 
     $scope.lookup = (x,y) -> $scope.grid[y][x]
-
-    $scope.last_status = ""
-
-    $scope.status = snake.status
 
     $scope.word = () ->
         snake.word((w) -> $scope.lookup w...) or $scope.last_word

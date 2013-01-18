@@ -53,7 +53,7 @@ wordAt g = T.pack . map (g `at`)
 trigramsAround' :: Trigrams -> Grid -> Coord -> [(Grid,Maybe Int)]
 trigramsAround' t g x =
     [ (g',lookupTrigram t g' xs)
-    | c <- ['A'..'Z'] ++ "ÅÄÖ"
+    | c <- chars
     , let g' = update g x c
     , xs <- trigramCoordsFrom x
     ]
@@ -72,11 +72,19 @@ pickSomeTrigram t g = do
         grids -> do
             k <- getRandomR (2000,20000)
             u <- getRandomR (5,20)
-            let grids' = filter ((> k) . snd) grids
+            let grids' = filter (\(g,v) -> v > k && not (bad g)) grids
                 n = length grids' `div` u + 1
             case grids' of
                 [] -> return Nothing
                 _  -> (Just . fst) `liftM` pickRandomElt (take n grids')
+
+bad :: Grid -> Bool
+bad g = any (\c -> length (filter (c ==) l) > 3) chars
+  where
+    l = T.unpack (T.concat g)
+
+chars :: [Char]
+chars = ['A'..'Z'] ++ "ÅÄÖ"
 
 makeGrid :: MonadRandom m => Trigrams -> m Grid
 makeGrid t = do
