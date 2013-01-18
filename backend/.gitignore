@@ -1,3 +1,6 @@
 saldom.xml
 saldom-stripped
 saldom-stripped-dups
+saldom-dups
+saldom-trigram-count
+saldom-trigrams-dups

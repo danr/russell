@@ -9,18 +9,18 @@ import xml.etree.cElementTree as cet
 import codecs
 import sys
 
-def ignore_pos(pos):
-    return pos == "pm" or len(pos) >= 3
+def ok_pos(pos):
+    return pos != "pm" and len(pos) < 3
 
-def ignore_msd(msd):
-    return len(msd) <= 3 and msd not in ["nom","ack"]
+def ok_msd(msd):
+    return len(msd) > 3 or msd in ["nom","ack"]
 
-OK_SET = set(u"abcdefghijklmnopqrstuvwxyzåäöABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖ")
+# We convert words to uppercase, but only these characters should be allowed
+OK_SET = set(u"ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖ")
 
-def ignore_word(word):
+def ok_word(word):
     diff = set(word).difference(OK_SET)
-    # print "word %s, diff: %s" % (word, diff)
-    return len(diff) > 0
+    return len(word) > 1 and len(diff) == 0
 
 def read_xml(xml_file='saldom.xml'):
 
@@ -30,6 +30,7 @@ def read_xml(xml_file='saldom.xml'):
     event, root = context.next()
 
     out = codecs.getwriter('utf-8')(sys.stdout)
+    err = codecs.getwriter('utf-8')(sys.stderr)
 
     for event, elem in context:
         if event == "end":
@@ -39,16 +40,20 @@ def read_xml(xml_file='saldom.xml'):
 
                 pos = findval(lem,"partOfSpeech")
 
-                if not ignore_pos(pos):
+                if ok_pos(pos):
 
                     # There may be several WordForms
                     for forms in elem.findall("WordForm"):
-                        word = findval(forms,"writtenForm")
+                        word_mix_case = findval(forms,"writtenForm")
+                        word = word_mix_case.upper()
                         msd = findval(forms,"msd")
 
-                        if not (ignore_msd(msd) or ignore_word(word)):
+                        if ok_msd(msd) and ok_word(word):
                             out.write(word)
                             out.write('\n')
+                            for x in range(0,len(word) - 2):
+                                err.write(word[x:x+3])
+                                err.write('\n')
 
             # Done parsing section. Clear tree to save memory
             if elem.tag in ['LexicalEntry', 'frame', 'resFrame']:

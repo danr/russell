@@ -22,14 +22,18 @@ import Data.Aeson hiding (json)
 import GHC.Generics
 
 import Data.Maybe
+
 import Data.Map (Map)
 import qualified Data.Map as M
+import Data.HashMap.Strict (HashMap)
+import qualified Data.HashMap.Strict as HM
 import Data.HashSet (HashSet)
-import qualified Data.HashSet as S
+import qualified Data.HashSet as HS
 
 import Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
 import qualified Data.Text.Lazy.IO as T
+import qualified Data.Text.Lazy.Read as T
 
 import Grid
 
@@ -81,25 +85,14 @@ type UserDB = Map String User
 newUserDB :: IO (TVar UserDB)
 newUserDB = newTVarIO M.empty
 
-probmap :: Map Int Char
-probmap = M.fromList $ zip [1..]
-    $ concatMap (\(c,v) -> replicate (550 - v * v * v) c)
-    $ M.toList char_scores
-
-{-
-newGrid :: IO Grid
-newGrid = replicateM 4 $ replicateM 4
-        $ (probmap M.!) `fmap` getRandomR (0 :: Int,M.size probmap)
-        -}
-
 userPlaced :: String -> String -> TVar UserDB -> STM Bool
-userPlaced name word db = (maybe False ((word `elem`) . user_history)
-                        . M.lookup name) `fmap` readTVar db
+userPlaced name word db =
+    maybe False ((word `elem`) . user_history) . M.lookup name <$> readTVar db
 
 userMod :: String -> (Int -> Int) -> ([String] -> [String])
         -> TVar UserDB -> STM (Int,Int)
 userMod name mod_score mod_history db = do
-    User{..} <- (fromMaybe emptyUser . M.lookup name) `fmap` readTVar db
+    User{..} <- fromMaybe emptyUser . M.lookup name <$> readTVar db
     let history' = mod_history user_history
         words' = length history'
         score' = mod_score user_score
@@ -111,36 +104,29 @@ userMod name mod_score mod_history db = do
     modifyTVar db (M.insert name updated)
     return (score',words')
 
-readSaldo :: IO [Text]
-readSaldo
-    = filter ((>1) . T.length) . map T.toUpper . T.lines
-   <$> T.readFile "backend/saldom-stripped"
+readLexicon :: IO (HashSet Text)
+readLexicon = HS.fromList . T.lines <$> T.readFile "backend/saldom-stripped"
 
-readSaldoWordsAndSet :: IO ([Text],HashSet Text)
-readSaldoWordsAndSet = do
-
-    saldo_list <- readSaldo
-
-    putStrLn $ "Read " ++ show (length saldo_list) ++ " words."
-
-    let ok_len x = 5 <= x && x <= 9
-        good_words = filter (ok_len . T.length) (saldo_list)
-
-    let saldo_set = S.fromList saldo_list
-
-    return (good_words,saldo_set)
+readTrigrams :: IO Trigrams
+readTrigrams = HM.fromList . map frequency . T.lines <$>
+    T.readFile "backend/saldom-trigram-count"
+  where
+    frequency :: Text -> (Text,Int)
+    frequency l = (T.tail w,either error fst (T.decimal n))
+      where (n,w) = T.break (== ' ') l
 
 main :: IO ()
 main = do
 
-    (good_words,saldo_set) <- readSaldoWordsAndSet
+    lexicon <- readLexicon
 
-    print $ map (`S.member` saldo_set)
-            ["FEST","VAG","ANOR","ROR","ABCD"]
+    trigrams <- readTrigrams
 
-    grid <- makeGrid good_words
+    print $ map (`HS.member` lexicon) ["FEST","VAG","ANOR","ROR","ABCD"]
 
-    print grid
+    grid <- makeGrid trigrams
+
+    mapM_ T.putStrLn grid
 
     let round = Round
             { round_grid = grid
@@ -168,12 +154,12 @@ main = do
             res <- liftIO $ atomically $ do
                 let name = user submit
                 user_placed <- userPlaced name word db
-                let word_ok = S.member (T.pack word) saldo_set
+                let word_ok = T.pack word `HS.member` lexicon
                     ok = not user_placed && word_ok
                     (mod_score,mod_history)
                         | ok        = ((+ value),(word:))
                         | otherwise = (id,id)
-                uncurry (Response ok) `fmap`
+                uncurry (Response ok) <$>
                     userMod name mod_score mod_history db
             json res
 
