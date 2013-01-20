@@ -5,8 +5,8 @@
     <script src="lib/underscore/underscore-min.js" type="text/javascript"></script>
     <script src="lib/angular-mobile/compiled/jquery-mobile-angular-adapter-standalone-1.2.0.js" type="text/javascript"></script>
 
-    <script src="js/resize.js" type="text/javascript"></script>
     <script src="js/app.js" type="text/javascript"></script>
+    <script src="js/resize.js" type="text/javascript"></script>
     <script src="js/snake.js" type="text/javascript"></script>
     <script src="js/grid-controller.js" type="text/javascript"></script>
     <script src="js/user-controller.js" type="text/javascript"></script>
@@ -19,51 +19,53 @@
   </head>
   <body ng-controller="UserCtrl">
 
-    <div class="container" ng-hide="logged_in">
-      <div class="login">
-        <h3>Russells ordorm</h3>
-        <input type="text" ng-model="user">
+    <div class="container" ng-style="css.container" ng-hide="logged_in">
+      <div class="login" ng-style="css.row">
+        <strong>Russells ordorm</strong>
+        <input type="text" ng-model="user" ng-style="css.row">
         <a ng-click="login()">Play!</a>
       </div>
     </div>
 
-    <div class="container" ng-controller="SummaryCtrl" ng-show="logged_in && !play_mode">
-      <ul ng-repeat="(name , user) in summary">
-        <li>{{ name }}: {{ user.user_score }} ({{ user.user_words }})</li>
-      </ul>
-      <pre>{{ summary | json }}</pre>
+    <div class="container" ng-style="css.container" ng-controller="SummaryCtrl"
+      ng-show="logged_in && !play_mode">
+      <div ng-style="res_row">Poäng</div>
+      <div ng-style="css.row" ng-repeat="(name , user) in summary" class="res_row">
+        <strong>{{ name }}</strong>: {{ user.user_score }} ({{ user.user_words }} ord)
+      </div>
+      <!-- <pre>{{ summary | json }}</pre> -->
     </div>
 
-    <div class="container" ng-controller="GridCtrl">
+    <div class="container" ng-style="css.container" ng-controller="GridCtrl">
       <div ng-show="logged_in && play_mode"
         ngm-vmouseup="up()"
         ng-mousedown="down()"
         ngm-vmousemove="enter($event)">
 
-        <div id="top">
+        <div id="top" ng-style="css.top">
           <span ng-class="last_status">&nbsp;{{ word() }}&nbsp;</span>
         </div>
 
-        <div id="top-space"></div>
+        <div id="top-space" ng-style="css.bottom_space"></div>
 
         <div class="row" ng-init="y = $index" ng-repeat="row in grid">
-          <div class="tile" ng-init="x = $index" ng-repeat="col in row"
-            ng-controller="TileCtrl"
+          <div class="tile" ng-style="css.tile"
+            ng-init="x = $index" ng-repeat="col in row"
             ng-class="status(x,y)">
-            <span class="shadow-score">{{ char_score(col) }}</span>
-            <span class="char">{{ col }}</span>
-            <span class="score">{{ char_score(col) }}</span>
+            <span ng-style="css.shadow_score" class="shadow-score">{{ char_score(col) }}</span>
+            <span ng-style="css.char" class="char">{{ col }}</span>
+            <span ng-style="css.score" class="score">{{ char_score(col) }}</span>
             <span id="x">{{ x }}</span>
             <span id="y">{{ y }}</span>
           </div>
         </div>
 
-        <div id="bottom-space"></div>
+        <div ng-style="css.bottom_space"></div>
 
-        <div id="bottom">
-          <div class="oneThird" style="display:inline-block">{{ time }}&nbsp;</div>
-          <div class="oneThird" style="display:inline-block; text-align:center;">&nbsp;{{ score }}</div>
-          <div class="oneThird" style="display:inline-block; text-align:right;">&nbsp;{{ words }}</div>
+        <div id="bottom" ng-style="css.bottom">
+          <div ng-style="css.one_third" style="display:inline-block">{{ time | sec }}&nbsp;</div>
+          <div ng-style="css.one_third" style="display:inline-block; text-align:center;">&nbsp;{{ score }}</div>
+          <div ng-style="css.one_third" style="display:inline-block; text-align:right;">&nbsp;{{ words }}</div>
         </div>
 
       </div>

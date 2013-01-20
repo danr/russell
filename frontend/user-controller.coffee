@@ -1,4 +1,4 @@
-russell_module.controller 'UserCtrl', ($scope, make_url) ->
+russell_module.controller 'UserCtrl', ($scope, make_url, resize) ->
 
     $scope.user = ""
 
@@ -9,4 +9,10 @@ russell_module.controller 'UserCtrl', ($scope, make_url) ->
     $scope.login = () -> if $scope.user != ""
         console.log "Logged in!"
         $scope.logged_in = true
+
+    $scope.css = {}
+    resize.recalc (new_css) -> $scope.css = new_css
+
+    # is this in AngularJS?
+    $(window).resize -> resize.recalc (new_css) -> $scope.css = new_css
 

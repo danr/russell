@@ -1,62 +1,95 @@
-$(window).resize (e) ->
 
-    h = $(window).height()
-    w = $(window).width()
+window.russell_module.factory 'resize', () ->
 
-    # Divide into three panes,
-    # top, center, bottom
+    recalc: (set_css) ->
 
-    TOP_PANE = 0.1
-    BOTTOM_PANE = 0.1
+        h = $(window).height()
+        w = $(window).width()
 
-    INNER = 0.75
-    MARGIN = 1 - INNER
-    BORDER = 0.015
+        # Divide into three panes,
+        # top, center, bottom
 
-    PANES = 1 + TOP_PANE + BOTTOM_PANE
+        TOP_PANE = 0.1
+        BOTTOM_PANE = 0.1
 
-    # Required height is w * PANES, if it is too much, make it less wide
-    if h < w * PANES
-        w = h / PANES
+        INNER = 0.75
+        MARGIN = 1 - INNER
+        BORDER = 0.015
 
-    top    = Math.floor(w * TOP_PANE)
-    center = w
-    bottom = Math.floor(w * BOTTOM_PANE)
+        PANES = 1 + TOP_PANE + BOTTOM_PANE
 
-    space = Math.floor ((h - top - center - bottom) / 2)
+        # Required height is w * PANES, if it is too much, make it less wide
+        if h < w * PANES
+            w = h / PANES
 
-    $('#top-space,#bottom-space').css('height',space)
+        top    = Math.floor(w * TOP_PANE)
+        center = w
+        bottom = Math.floor(w * BOTTOM_PANE)
 
-    $('.oneThird').css('width',Math.floor((w * 0.9)/3))
+        space = Math.floor ((h - top - center - bottom) / 2)
 
-    $('div.container')
-        .css('width',Math.floor center)
-        .css('height',Math.floor h)
+        # $('#top-space,#bottom-space').css('height',space)
 
-    # Sides of a tile
-    side = center / 4
-    inner = side * INNER
-    margin = side * (MARGIN / 2)
-    border = side * BORDER
-    inner_r = Math.floor inner
-    border_r = Math.max 1, Math.floor border
-    margin_r = (Math.floor margin) - border_r
+        # $('.oneThird').css('width',Math.floor((w * 0.9)/3))
+
+        # $('div.container')
+        #     .css('width',Math.floor center)
+        #     .css('height',Math.floor h)
+
+        # Sides of a tile
+        side = center / 4
+        inner = side * INNER
+        margin = side * (MARGIN / 2)
+        border = side * BORDER
+        inner_r = Math.floor inner
+        border_r = Math.max 1, Math.floor border
+        margin_r = (Math.floor margin) - border_r
 
 
-    char_size = Math.floor(inner * 0.84)
-    score_size = Math.floor(inner * 0.2)
+        char_size = Math.floor(inner * 0.84)
+        score_size = Math.floor(inner * 0.2)
 
-    tiles = $('.tile')
-        .css('width',inner_r)
-        .css('height',inner_r)
-        .css('margin',margin_r)
-        .css('border-width',border_r)
+        # tiles = $('.tile')
+        #     .css('width',inner_r)
+        #     .css('height',inner_r)
+        #     .css('margin',margin_r)
+        #     .css('border-width',border_r)
 
-    tiles.find('.char').css('font-size',char_size)
-    tiles.find('.score').css('font-size',score_size)
-    tiles.find('.shadow-score').css('font-size',score_size)
+        # tiles.find('.char').css('font-size',char_size)
+        # tiles.find('.score').css('font-size',score_size)
+        # tiles.find('.shadow-score').css('font-size',score_size)
 
-    $('#top').css('height',top).css('font-size',Math.round(top * 0.9))
-    $('#bottom').css('height',bottom).css('font-size',Math.round(bottom * 0.9))
+        # $('#top').css('height',top).css('font-size',Math.round(top * 0.9))
+        # $('#bottom').css('height',bottom).css('font-size',Math.round(bottom * 0.9))
 
-$(window).trigger 'resize'
+        set_css
+            tile:
+                width: inner_r
+                height: inner_r
+                margin: margin_r
+                'border-width': border_r
+            char:
+                'font-size': char_size
+            score:
+                'font-size': score_size
+            shadow_score:
+                'font-size': score_size
+            top:
+                height: top
+                'font-size': Math.round(top * 0.9)
+            bottom:
+                height: bottom
+                'font-size': Math.round(bottom * 0.9)
+            top_space:
+                height: space
+            bottom_space:
+                height: space
+            row:
+                width: Math.floor(w * 0.9)
+                'font-size': Math.round(bottom * 0.9)
+            one_third:
+                width: Math.floor((w * 0.9) / 3)
+            container:
+                width: Math.floor center
+                height: Math.floor h
+

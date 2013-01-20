@@ -136,10 +136,10 @@ us :: Int
 us = 1000 * 1000
 
 play_length :: Integer
-play_length = 60
+play_length = 120
 
 score_length :: Integer
-score_length = 30
+score_length = 20
 
 diffToMs :: NominalDiffTime -> Integer
 diffToMs = truncate . (precision *) . toRational
