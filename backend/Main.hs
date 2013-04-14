@@ -139,7 +139,7 @@ play_length :: Integer
 play_length = 120
 
 score_length :: Integer
-score_length = 20
+score_length = 12
 
 diffToMs :: NominalDiffTime -> Integer
 diffToMs = truncate . (precision *) . toRational
@@ -242,9 +242,10 @@ main = do
                 Just grid -> do
                     Just submit <- jsonData
                     let word = map (grid `at`) (submitSnake submit)
-                        value = sum (map (char_scores M.!) word)
+                        value = sum (map (char_scores M.!) word) + length word
                         word_text = T.pack word
                     res <- liftIO $ do
+                        T.putStrLn word_text
                         (ok,(score',words')) <- atomically $ do
                             let name = user submit
                             user_placed <- userPlaced name word_text db

@@ -22,10 +22,14 @@ import Data.Data
 import Data.Typeable
 import Data.Text.Trie.Map (TrieMap)
 import qualified Data.Text.Trie.Map as TM
+import Test.QuickCheck
 
 -- | A set of strings of `Char`s.
 newtype TrieSet = TrieSet { trieMap :: TrieMap () }
   deriving (Eq,Ord,Show,Data,Typeable)
+
+instance Arbitrary TrieSet where
+    arbitrary = fmap fromStringList arbitrary
 
 -- | An inefficient implementation of number of elements
 size :: TrieSet -> Int

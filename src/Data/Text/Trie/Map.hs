@@ -2,6 +2,7 @@
 -- | A somewhat efficient implementation of trie map of Chars.
 module Data.Text.Trie.Map
     ( TrieMap
+    , invariant
     , size
     , empty
     , isEmpty
@@ -15,16 +16,17 @@ module Data.Text.Trie.Map
     , lookupString
     ) where
 
-import Prelude hiding (lookup)
+import Prelude hiding (lookup,all)
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Maybe (fromMaybe,isNothing)
+import Data.Maybe (fromMaybe,isNothing,isJust)
 import Data.Data
 import Data.Typeable
 import Data.Foldable
 import Data.Monoid
+import Test.QuickCheck
 
 -- Invariant: if the node is Nothing, but the Map isn't empty, it does
 -- contain some values.
@@ -32,6 +34,16 @@ import Data.Monoid
 -- | A mapping from strings of `Char`s to @a@s, using `Data.Map.Map`.
 data TrieMap a = Node !(Maybe a) !(Map Char (TrieMap a))
   deriving (Eq,Ord,Show,Data,Typeable,Functor)
+
+instance Arbitrary a => Arbitrary (TrieMap a) where
+    arbitrary = fmap fromStringList arbitrary
+
+-- | The trie map invariant
+invariant :: TrieMap a -> Bool
+invariant (Node e m) = all innerInvariant m
+
+innerInvariant :: TrieMap a -> Bool
+innerInvariant (Node e m) = all innerInvariant m && (isJust e || not (M.null m))
 
 -- | Inefficient implementation of number of elements
 size :: TrieMap a -> Int
