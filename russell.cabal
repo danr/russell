@@ -14,7 +14,7 @@ executable russell
   ghc-options:       -threaded -O2
   hs-source-dirs:    backend
   build-depends:
-        base ==4.6.*
+        base >=4.5
       , transformers
       , containers
       , unordered-containers
