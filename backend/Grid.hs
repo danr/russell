@@ -4,21 +4,15 @@ module Grid where
 import Data.HashSet (HashSet)
 import qualified Data.HashSet as HS
 
-import Control.Applicative
-
-import Data.Maybe
 import Data.List
 import Data.Ord
 
 import Control.Monad
 import Control.Monad.Random
-import Control.Monad.Random.Class
 
 import Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
-import qualified Data.Text.Lazy.IO as T
 
-import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
 
 import Data.Map (Map)
@@ -81,7 +75,7 @@ trigramsAround' t g x =
 
 trigramsAround :: Trigrams -> Grid -> Coord -> [(Grid,Int)]
 trigramsAround t g x = sortBy (flip $ comparing snd)
-    [ (g,x) | (g,Just x) <- trigramsAround' t g x]
+    [ (g',x') | (g',Just x') <- trigramsAround' t g x ]
 
 -- Fails if there is no trigrams around this coordinate,
 pickSomeTrigram :: MonadRandom m => Trigrams -> Grid -> m (Maybe Grid)
@@ -93,7 +87,7 @@ pickSomeTrigram t g = do
         grids -> do
             k <- getRandomR (2000,20000)
             u <- getRandomR (5,20)
-            let grids' = filter (\(g,v) -> v > k && not (bad g)) grids
+            let grids' = filter (\(g',v) -> v > k && not (bad g')) grids
                 n = length grids' `div` u + 1
             case grids' of
                 [] -> return Nothing
@@ -140,9 +134,6 @@ emptyGrid = replicate 4 "    "
 
 emptyPos :: Grid -> Coord -> Bool
 emptyPos g x = g `at` x == ' '
-
-neighbour :: Coord -> Coord -> Bool
-neighbour (x,y) (x',y') = max (abs (x - x')) (abs (x + x')) == 1
 
 neighbours :: Coord -> [Coord]
 neighbours (x,y) = filter okCoord $ concat

@@ -1,5 +1,4 @@
-{-# LANGUAGE OverloadedStrings, DeriveGeneric, GeneralizedNewtypeDeriving,
-             ViewPatterns, RecordWildCards #-}
+{-# LANGUAGE RecordWildCards #-}
 module Main where
 
 import Prelude hiding (words)
@@ -8,34 +7,19 @@ import Data.Monoid (mconcat)
 import Control.Monad.IO.Class (liftIO)
 
 import Control.Applicative hiding ((<|>))
-import Control.Monad.Random
-import Control.Monad.Random.Class
 import Control.Monad
 import Control.Concurrent.STM
 
 import Network.Wai.Middleware.RequestLogger (logStdout)
 import Network.Wai.Middleware.Static
-import Web.Scotty
+import Web.Scotty hiding (next)
 
 import Data.Aeson hiding (json)
-import GHC.Generics
-
-import Data.Maybe
 
 import Network.WebSockets as WS
--- import Network
 
 import Data.Map (Map)
 import qualified Data.Map as M
-import Data.HashMap.Strict (HashMap)
-import qualified Data.HashMap.Strict as HM
-import Data.HashSet (HashSet)
-import qualified Data.HashSet as HS
-
-import Data.Text.Lazy (Text)
-import qualified Data.Text.Lazy as T
-import qualified Data.Text.Lazy.IO as T
-import qualified Data.Text.Lazy.Read as T
 
 import Control.Concurrent
 import Data.Time.Clock
@@ -113,7 +97,7 @@ main = do
                                 let (mod_score,mod_history)
                                         | ok        = ((+ value),((word_text,value):))
                                         | otherwise = (id,id)
-                                userMod name mod_score mod_history db
+                                void $ userMod name mod_score mod_history db
                                 return ok
                             return Response
                                 { correct = ok
@@ -137,7 +121,7 @@ main = do
             (mg,users) <- atomically $ liftM2 (,) grid_var (readTVar db)
             timeout <- calc_next_change
             case mg of
-                Just grid -> do
+                Just{} -> do
                     let scores =
                             [ (u,user_score,user_words)
                             | (u,User{..}) <- M.toList users
@@ -165,7 +149,7 @@ main = do
             print $ "ms to next change: " ++ show ms
             return ms
 
-    forkIO $ forever $ do
+    void $ forkIO $ forever $ do
         p <- atomically play_mode
         let delay = if p then play_length else score_length
         t0 <- getCurrentTime
@@ -197,7 +181,7 @@ main = do
                 (`withJust` sendToAll) =<< makeGridMsg
 
     -- Web server
-    forkIO $ scotty 3000 $ do
+    void $ forkIO $ scotty 3000 $ do
 
         middleware logStdout
         middleware $ staticPolicy $ mconcat
