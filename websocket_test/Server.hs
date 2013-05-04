@@ -55,31 +55,29 @@ app users rq = do
     WS.spawnPingThread 1
     liftIO . putStrLn . ("Client version: " ++) =<< WS.getVersion
     sink <- WS.getSink
-    continue sink
+    login sink `catchWsError` handleErr sink
   where
-    continue sink = login `catchWsError` handleErr sink
-      where
-        login = forever $ do
-            msg <- receiveJSON
-            case msg of
-                Just Connect{..} -> do
-                    liftIO . atomically $ modifyTVar users (M.insert username sink)
-                    liftIO $ sendJSON sink (Connected username)
-                    listen username
-                _ -> return ()
+    login sink = forever $ do
+        msg <- receiveJSON
+        case msg of
+            Just Connect{..} -> do
+                liftIO . atomically $ modifyTVar users (M.insert username sink)
+                liftIO $ sendJSON sink (Connected username)
+                listen username
+            _ -> return ()
 
-        listen username = forever $ do
-            msg <- receiveJSON
-            case msg of
-                Just Send{..} -> do
-                    users' <- liftIO . atomically $ readTVar users
-                    forM_ (M.elems users') $ \ sink' ->
-                        liftIO (sendJSON sink' (Broadcast username message))
-                            `catchWsError` handleErr sink'
-                _ -> return ()
+    listen username = forever $ do
+        msg <- receiveJSON
+        case msg of
+            Just Send{..} -> do
+                users' <- liftIO . atomically $ readTVar users
+                forM_ (M.elems users') $ \ sink' ->
+                    liftIO (sendJSON sink' (Broadcast username message))
+                        `catchWsError` handleErr sink'
+            _ -> return ()
 
-        handleErr sink e = liftIO $ do
-            putStrLn $ "Got an error: " ++ show e
-            atomically $ modifyTVar users (M.filter (/= sink))
+    handleErr sink e = liftIO $ do
+        putStrLn $ "Got an error: " ++ show e
+        atomically $ modifyTVar users (M.filter (/= sink))
 
 
