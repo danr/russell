@@ -1,4 +1,4 @@
-russell_module.factory 'snake', ($http, $q, $timeout, make_url) ->
+russell_module.factory 'snake', (websocket, $q, $timeout, make_url) ->
 
     snake = []
     statuses = (("" for i in [0..3]) for j in [0..3])
@@ -19,7 +19,7 @@ russell_module.factory 'snake', ($http, $q, $timeout, make_url) ->
 
     word: (lookup) -> (_.map snake, lookup).join('')
 
-    erase: (user) ->
+    erase: () ->
         for [x,y] in snake
             statuses[x][y] = "submitted"
 
@@ -29,20 +29,19 @@ russell_module.factory 'snake', ($http, $q, $timeout, make_url) ->
 
         answer = $q.defer()
 
-        handle_success = (res) ->
+        websocket.send
+            Submit:
+                snake: snake_copy
+
+        websocket.once "Response", (res) ->
             console.log "Handling", res
             new_status = if res.correct then "correct" else "wrong"
+            console.log "New status: #{new_status}"
             upd_status "submitted", new_status, snake_copy
             answer.resolve _.extend res, new_status: new_status
             clear_status = () ->
                 upd_status new_status, "", snake_copy
             $timeout clear_status, 300
-
-        post = $http.post (make_url "/submit/"),
-            snake: snake_copy
-            user: user
-
-        post.success handle_success
 
         answer.promise
 

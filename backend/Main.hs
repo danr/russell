@@ -153,7 +153,8 @@ main = do
         -- Make the grid message
         makeGridMsg = do
             mg <- atomically grid_var
-            return $ fmap (\ grid -> Grid grid (M.toList charScores)) mg
+            timeout <- calc_next_change
+            return $ fmap (\ grid -> Grid timeout grid (M.toList charScores)) mg
 
         play_mode = maybe False (const True) <$> grid_var
 
@@ -188,6 +189,7 @@ main = do
                 thrd <- forkIO $ forever $ do
                     sendToAll =<< makeScoreMsg
                     threadDelay (1000 * 1000)
+
                 atomically $ do
                     writeTVar state (Just (g,thrd))
                     -- Change this so all logged in users start with 0 score instead

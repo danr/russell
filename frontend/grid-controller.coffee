@@ -1,29 +1,14 @@
-russell_module.controller 'GridCtrl', ($scope, $http, snake, make_url) ->
+russell_module.controller 'GridCtrl', ($scope, websocket, snake, make_url) ->
 
-    console.log $scope
+    websocket.on "Grid", (data) -> $scope.$apply ->
+        $scope.reset()
+        $scope.grid = data.grid
+        $scope.scores = _.object data.char_scores
+        $scope.time = data.timeout
+        $scope.$parent.play_mode = true
 
-    $scope.$watch 'logged_in', (lg) ->
-        if lg
-            $scope.get_grids()
-
-    q = null
-
-    $scope.get_grids = () ->
-        console.log "Grid: getting grids"
-        if q == null
-            q = {}
-            q = $http.get(make_url "/grid/")
-            q.success (res) ->
-                console.log "Grid: ", res
-                $scope.reset()
-                $scope.grid = res.grid_response
-                $scope.scores = _.object res.round_char_scores
-                $scope.time = res.grid_timeout
-                $scope.$parent.play_mode = true
-                $scope.$watch 'play_mode', () ->
-                    if not $scope.play_mode
-                        $scope.get_grids()
-                q = null
+    websocket.on "ScoreBoard", (data) -> $scope.$apply ->
+        $scope.time = data.timeout
 
     $scope.reset = () ->
         $scope.coord = [undefined,undefined]
@@ -55,11 +40,11 @@ russell_module.controller 'GridCtrl', ($scope, $http, snake, make_url) ->
         $scope.drawing = false
         $scope.last_word = $scope.word()
         $scope.last_status = "submitted"
-        snake.erase($scope.user).then (res) ->
+        snake.erase().then (res) -> $scope.$apply ->
             $scope.last_status = res.new_status
-            $scope.score = Math.max res.score, $scope.score
-            $scope.words = Math.max res.words, $scope.words
-            $scope.time = res.resp_timeout
+            if res.correct
+                $scope.score += res.score
+                $scope.words++
 
     $scope.enter = ($event) ->
         if $event.originalEvent.type == "touchmove"
@@ -80,5 +65,4 @@ russell_module.controller 'GridCtrl', ($scope, $http, snake, make_url) ->
 
     $scope.word = () ->
         snake.word((w) -> $scope.lookup w...) or $scope.last_word
-
 

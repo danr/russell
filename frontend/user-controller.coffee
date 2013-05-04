@@ -1,4 +1,4 @@
-russell_module.controller 'UserCtrl', ($scope, make_url, resize) ->
+russell_module.controller 'UserCtrl', ($scope, websocket, make_url, resize) ->
 
     $scope.user = ""
 
@@ -7,7 +7,12 @@ russell_module.controller 'UserCtrl', ($scope, make_url, resize) ->
     $scope.play_mode = false
 
     $scope.login = () -> if $scope.user != ""
-        console.log "Logged in!"
+        console.log "Logging in..."
+        websocket.send
+            Connect:
+                username: $scope.user
+
+    websocket.on "Connected", (data) -> $scope.$apply ->
         $scope.logged_in = true
 
     $scope.css = {}

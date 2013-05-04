@@ -3,7 +3,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <script src="lib/underscore/underscore-min.js" type="text/javascript"></script>
-    <script src="lib/angular-mobile/compiled/jquery-mobile-angular-adapter-standalone-1.2.0.js" type="text/javascript"></script>
+    <script src="lib/angular-mobile/compiled/min/jquery-mobile-angular-adapter-standalone-1.2.0.js" type="text/javascript"></script>
 
     <script src="js/app.js" type="text/javascript"></script>
     <script src="js/resize.js" type="text/javascript"></script>
@@ -30,8 +30,8 @@
     <div class="container" ng-style="css.container" ng-controller="SummaryCtrl"
       ng-show="logged_in && !play_mode">
       <div ng-style="res_row">Poäng</div>
-      <div ng-style="css.row" ng-repeat="(name , user) in summary" class="res_row">
-        <strong>{{ name }}</strong>: {{ user.user_score }} ({{ user.user_words }} ord)
+      <div ng-style="css.row" ng-repeat="(name, sum) in summary" class="res_row">
+        <strong>{{ name }}</strong>: {{ sum.score }} ({{ sum.words }} ord)
       </div>
       <!-- <pre>{{ summary | json }}</pre> -->
     </div>

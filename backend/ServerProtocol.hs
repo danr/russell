@@ -11,7 +11,7 @@ data ServerProtocol
     | Response    { correct :: Bool, score :: Int }
     | ScoreBoard  { timeout :: Integer, scores :: [(String,Int,Int)] }
     | FinalScores { timeout :: Integer, final_scores :: [(String,Int,[(Text,Int)])] }
-    | Grid        { grid :: [Text], char_scores :: [(Char,Int)] }
+    | Grid        { timeout :: Integer, grid :: [Text], char_scores :: [(Char,Int)] }
   deriving (Show,Generic)
 
 instance ToJSON ServerProtocol
