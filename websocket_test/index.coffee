@@ -25,8 +25,14 @@ chat_module.factory 'websocket', ($q, log) ->
             log "message #{evt.data}"
             # log "message #{JSON.parse evt.data} #{evt.data} #{evt.data.length}", evt.data, evt
             [[command,data]] = _.pairs JSON.parse evt.data
-            for listener in command_map[command]
-                listener(data)
+            listerners = command_map[command]
+            if listeners
+                new_listeners = []
+                for [beh,listener] in command_map[command]
+                    listener(data)
+                    if beh != 'once'
+                        new_listeners.push listener
+                command_map[command] = new_listeners
 
         ws.onopen = (evt) ->
             log "onopen"
@@ -52,10 +58,13 @@ chat_module.factory 'websocket', ($q, log) ->
         log "on #{command_str}"
         unless command_str in command_map
             command_map[command_str] = []
-            command_map[command_str].push callback
+            command_map[command_str].push ['on', callback]
 
-    off : (command_str, callback) ->
-        command_map[command_str]?.splice command_map.indexOf(command_str), 1
+    once : (command_str, callback) ->
+        log "once #{command_str}"
+        unless command_str in command_map
+            command_map[command_str] = []
+            command_map[command_str].push ['once', callback]
 
 chat_module.run (websocket, address, log) ->
     log "Sending to websocket"

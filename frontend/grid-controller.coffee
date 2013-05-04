@@ -1,15 +1,5 @@
 russell_module.controller 'GridCtrl', ($scope, websocket, snake, make_url) ->
 
-    websocket.on "Grid", (data) -> $scope.$apply ->
-        $scope.reset()
-        $scope.grid = data.grid
-        $scope.scores = _.object data.char_scores
-        $scope.time = data.timeout
-        $scope.$parent.play_mode = true
-
-    websocket.on "ScoreBoard", (data) -> $scope.$apply ->
-        $scope.time = data.timeout
-
     $scope.reset = () ->
         $scope.coord = [undefined,undefined]
 
@@ -65,4 +55,14 @@ russell_module.controller 'GridCtrl', ($scope, websocket, snake, make_url) ->
 
     $scope.word = () ->
         snake.word((w) -> $scope.lookup w...) or $scope.last_word
+
+    websocket.on "Grid", (data) -> $scope.$apply ->
+        $scope.reset()
+        $scope.grid = data.grid
+        $scope.scores = _.object data.char_scores
+        $scope.time = data.timeout
+        $scope.$parent.play_mode = true
+
+    websocket.on "ScoreBoard", (data) -> $scope.$apply ->
+        $scope.time = data.timeout
 

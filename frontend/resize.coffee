@@ -45,22 +45,8 @@ window.russell_module.factory 'resize', () ->
         border_r = Math.max 1, Math.floor border
         margin_r = (Math.floor margin) - border_r
 
-
         char_size = Math.floor(inner * 0.84)
         score_size = Math.floor(inner * 0.2)
-
-        # tiles = $('.tile')
-        #     .css('width',inner_r)
-        #     .css('height',inner_r)
-        #     .css('margin',margin_r)
-        #     .css('border-width',border_r)
-
-        # tiles.find('.char').css('font-size',char_size)
-        # tiles.find('.score').css('font-size',score_size)
-        # tiles.find('.shadow-score').css('font-size',score_size)
-
-        # $('#top').css('height',top).css('font-size',Math.round(top * 0.9))
-        # $('#bottom').css('height',bottom).css('font-size',Math.round(bottom * 0.9))
 
         set_css
             tile:
@@ -86,7 +72,10 @@ window.russell_module.factory 'resize', () ->
                 height: space
             row:
                 width: Math.floor(w * 0.9)
-                'font-size': Math.round(bottom * 0.9)
+                'font-size': Math.round(bottom * 0.8)
+            row_ident:
+                'margin-left': Math.floor(w * 0.1)
+                'font-size': Math.round(bottom * 0.5)
             one_third:
                 width: Math.floor((w * 0.9) / 3)
             container:

@@ -53,10 +53,10 @@ trigramsFile :: FilePath
 trigramsFile = "backend/saldom-trigram-count"
 
 play_length :: Integer
-play_length = 120
+play_length = 15
 
 score_length :: Integer
-score_length = 12
+score_length = 5
 
 us :: Int
 us = 1000 * 1000
@@ -145,7 +145,7 @@ main = do
                     return (ScoreBoard timeout scores)
                 Nothing -> do
                     let scores =
-                            [ (u,user_score,user_history)
+                            [ (u,user_history)
                             | (u,User{..}) <- M.toList users
                             ]
                     return (FinalScores timeout scores)
