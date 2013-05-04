@@ -43,39 +43,43 @@ main = do
             ] <|> only (zip ["","/"] (repeat "index.html"))
     runServer "0.0.0.0" 8000 (app users)
 
+receiveJSON :: FromJSON a => WebSockets Hybi10 (Maybe a)
+receiveJSON = fmap decode WS.receiveData
+
+sendJSON :: ToJSON a => Sink Hybi10 -> a -> IO ()
+sendJSON s = WS.sendSink s . DataMessage . Text . encode
+
 app :: TVar (Map String (Sink Hybi10)) -> Request -> WebSockets Hybi10 ()
 app users rq = do
     WS.acceptRequest rq
     WS.spawnPingThread 1
     liftIO . putStrLn . ("Client version: " ++) =<< WS.getVersion
     sink <- WS.getSink
-    (`catchWsError` handleErr sink) $ forever $ do
-        msg <- WS.receiveData
-        liftIO $ putStrLn ("Msg: " ++ show msg)
-        case decode msg of
-            Just Connect{..} -> do
-                liftIO $ putStrLn ("Username: " ++ username)
-                liftIO . atomically $ modifyTVar users (M.insert username sink)
-                liftIO $ putStrLn (show (encode (Connected username)))
-                liftIO $ WS.sendSink sink . DataMessage . Text . encode $
-                    Connected username
-                forever $ do
-                    msg <- WS.receiveData
-                    liftIO $ putStrLn ("Msg: " ++ show msg)
-                    case decode msg of
-                        Just Send{..} -> do
-                            liftIO $ putStrLn ("Message: " ++ message)
-                            users' <- liftIO . atomically $ readTVar users
-                            liftIO $ forM_ (M.elems users') $ \ sink' -> do
-                                (WS.sendSink sink' . DataMessage . Text . encode $
-                                    Broadcast username message) `E.catch` \ (e :: SomeException) -> do
-                                        putStrLn $ "got " ++ show e
-                                        return ()
-                        _ -> return ()
-            _ -> return ()
+    continue sink
   where
-    handleErr sink e = liftIO $ do
-        putStrLn $ "got " ++ show e
-        atomically $ modifyTVar users (M.filter (/= sink))
+    continue sink = login `catchWsError` handleErr sink
+      where
+        login = forever $ do
+            msg <- receiveJSON
+            case msg of
+                Just Connect{..} -> do
+                    liftIO . atomically $ modifyTVar users (M.insert username sink)
+                    liftIO $ sendJSON sink (Connected username)
+                    listen username
+                _ -> return ()
+
+        listen username = forever $ do
+            msg <- receiveJSON
+            case msg of
+                Just Send{..} -> do
+                    users' <- liftIO . atomically $ readTVar users
+                    forM_ (M.elems users') $ \ sink' ->
+                        liftIO (sendJSON sink' (Broadcast username message))
+                            `catchWsError` handleErr sink'
+                _ -> return ()
+
+        handleErr sink e = liftIO $ do
+            putStrLn $ "Got an error: " ++ show e
+            atomically $ modifyTVar users (M.filter (/= sink))
 
 
