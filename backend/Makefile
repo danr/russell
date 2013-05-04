@@ -21,7 +21,7 @@ saldom-trigram-count: saldom-trigrams-dups
 	sort $(arg1) | uniq -c | sort -rn > $@
 	sed -i 's/^ *//' $@
 
-.PHONY: all saldom-dups
+.PHONY: all
 
 all: saldom-stripped saldom-trigram-count
 
