@@ -11,8 +11,7 @@ import Control.Applicative hiding ((<|>))
 import Control.Monad.Random
 import Control.Monad.Random.Class
 import Control.Monad
-import Control.Monad.STM
-import Control.Concurrent.STM.TVar
+import Control.Concurrent.STM
 
 import Network.Wai.Middleware.RequestLogger (logStdout)
 import Network.Wai.Middleware.Static
@@ -22,6 +21,9 @@ import Data.Aeson hiding (json)
 import GHC.Generics
 
 import Data.Maybe
+
+import Network.WebSockets as WS
+-- import Network
 
 import Data.Map (Map)
 import qualified Data.Map as M
@@ -35,111 +37,29 @@ import qualified Data.Text.Lazy as T
 import qualified Data.Text.Lazy.IO as T
 import qualified Data.Text.Lazy.Read as T
 
-import System.Environment
 import Control.Concurrent
 import Data.Time.Clock
 
+import UserDB
+import Lexicon
 import Grid
+import ServerProtocol
+import ClientProtocol
 
-data Submit = Submit
-    { snake :: [[Int]]
-    , user  :: String
-    }
-  deriving Generic
+lexiconFile :: FilePath
+lexiconFile = "backend/saldom-stripped"
 
-instance FromJSON Submit
-
-data Response = Response
-    { correct :: Bool
-    , score   :: Int
-    , words   :: Int
-    , resp_timeout :: Integer
-    }
-  deriving Generic
-
-instance ToJSON Response
-
-data GridResponse = GridResponse
-    { grid_response    :: Grid
-    , grid_char_scores :: [(Char,Int)]
-    , grid_timeout     :: Integer
-    }
-  deriving Generic
-
-data SummaryResponse = SummaryResponse
-    { summary_scores  :: [(String,User)]
-    , summary_timeout :: Integer
-    }
-  deriving Generic
-
-instance ToJSON SummaryResponse
-instance ToJSON GridResponse
-
-submitSnake :: Submit -> Snake
-submitSnake = map (\[x,y] -> (x,y)) . snake
-
-type Snake = [Coord]
-
-data User = User
-    { user_score :: Int
-    , user_words :: Int
-    , user_history :: [(Text,Int)]
-    }
-  deriving Generic
-
-instance ToJSON User
-
-emptyUser :: User
-emptyUser = User
-    { user_score = 0
-    , user_words = 0
-    , user_history = []
-    }
-
-type UserDB = Map String User
-
-emptyUserDB :: UserDB
-emptyUserDB = M.empty
-
-userPlaced :: String -> Text -> TVar UserDB -> STM Bool
-userPlaced name word db
-    = maybe False ((word `elem`) . map fst . user_history)
-    . M.lookup name <$> readTVar db
-
-userMod :: String -> (Int -> Int) -> ([(Text,Int)] -> [(Text,Int)])
-        -> TVar UserDB -> STM (Int,Int)
-userMod name mod_score mod_history db = do
-    User{..} <- fromMaybe emptyUser . M.lookup name <$> readTVar db
-    let history' = mod_history user_history
-        words' = length history'
-        score' = mod_score user_score
-        updated = User
-            { user_score = score'
-            , user_words = words'
-            , user_history = history'
-            }
-    modifyTVar db (M.insert name updated)
-    return (score',words')
-
-readLexicon :: IO (HashSet Text)
-readLexicon = HS.fromList . T.lines <$> T.readFile "backend/saldom-stripped"
-
-readTrigrams :: IO Trigrams
-readTrigrams = HM.fromList . map frequency . T.lines <$>
-    T.readFile "backend/saldom-trigram-count"
-  where
-    frequency :: Text -> (Text,Int)
-    frequency l = (T.tail w,either error fst (T.decimal n))
-      where (n,w) = T.break (== ' ') l
-
-us :: Int
-us = 1000 * 1000
+trigramsFile :: FilePath
+trigramsFile = "backend/saldom-trigram-count"
 
 play_length :: Integer
 play_length = 120
 
 score_length :: Integer
 score_length = 12
+
+us :: Int
+us = 1000 * 1000
 
 diffToMs :: NominalDiffTime -> Integer
 diffToMs = truncate . (precision *) . toRational
@@ -148,30 +68,94 @@ diffToMs = truncate . (precision *) . toRational
 main :: IO ()
 main = do
 
-    args <- getArgs
+    lexicon <- readLexicon lexiconFile
 
-    lexicon <- readLexicon
+    trigrams <- readTrigrams trigramsFile
 
-    trigrams <- readTrigrams
+    state <- newTVarIO Nothing
 
-    when (args == ["test"]) $
-        print $ map (`HS.member` lexicon) ["FEST","VAG","ANOR","ROR","ABCD"]
+    let grid_var      = fmap fst <$> readTVar state
+        notify_thread = fmap snd <$> readTVar state
 
-    when (args == ["grids"]) $ forever $ do
-        g <- makeGrid trigrams
-        T.putStrLn ""
-        mapM_ T.putStrLn g
-
-    grid_var <- newTVarIO Nothing
     scores_var <- newTVarIO []
 
     next_change <- newTVarIO =<< getCurrentTime
 
     db <- newTVarIO emptyUserDB
+    sinks <- newTVarIO M.empty
 
-    let play_mode_stm = maybe False (const True) <$> readTVar grid_var
+    let -- Handle login from the user
+        login sink = forever $ do
+            msg <- receiveJSON
+            case msg of
+                Just Connect{..} -> do
+                    liftIO $ do
+                        atomically $ do
+                            modifyTVar sinks (M.insert username sink)
+                            modifyTVar db (M.insert username emptyUser)
+                        sendJSON sink (Connected username)
+                        flip withJust (sendJSON sink) =<< makeGridMsg
+                        sendJSON sink =<< makeScoreMsg
+                    listen sink username
+                _ -> return ()
 
-        play_mode = atomically play_mode_stm
+        -- Handle snake submit messages
+        listen sink name = forever $ do
+            msg <- receiveJSON
+            mg <- liftIO $ atomically grid_var
+            liftIO $ case (msg,mg) of
+                (Just Submit{..},Just grid) -> (sendJSON sink =<<) $
+                    case snakeOnGrid lexicon grid charScores snake of
+                        Nothing -> return Response { correct = False, score = 0 }
+                        Just (word_text,value) -> do
+                            ok <- atomically $ do
+                                ok <- not <$> userPlaced name word_text db
+                                let (mod_score,mod_history)
+                                        | ok        = ((+ value),((word_text,value):))
+                                        | otherwise = (id,id)
+                                userMod name mod_score mod_history db
+                                return ok
+                            return Response
+                                { correct = ok
+                                , score = if ok then value else 0
+                                }
+                _ -> return ()
+
+        -- Handle errors
+        handleErr sink e = liftIO $ do
+            putStrLn $ "Got an error: " ++ show e
+            atomically $ modifyTVar sinks (M.filter (/= sink))
+
+        -- Send message to all
+        sendToAll :: ToJSON a => a -> IO ()
+        sendToAll m = do
+            sinks' <- atomically (readTVar sinks)
+            mapM_ (`sendJSON` m) (M.elems sinks')
+
+        -- Make the score board message
+        makeScoreMsg = do
+            (mg,users) <- atomically $ liftM2 (,) grid_var (readTVar db)
+            timeout <- calc_next_change
+            case mg of
+                Just grid -> do
+                    let scores =
+                            [ (u,user_score,user_words)
+                            | (u,User{..}) <- M.toList users
+                            ]
+                    return (ScoreBoard timeout scores)
+                Nothing -> do
+                    let scores =
+                            [ (u,user_score,user_history)
+                            | (u,User{..}) <- M.toList users
+                            ]
+                    return (FinalScores timeout scores)
+
+        -- Make the grid message
+        makeGridMsg = do
+            mg <- atomically grid_var
+            return $ fmap (\ grid -> Grid grid (M.toList charScores)) mg
+
+        play_mode = maybe False (const True) <$> grid_var
 
         calc_next_change = do
             next <- atomically (readTVar next_change)
@@ -181,7 +165,7 @@ main = do
             return ms
 
     forkIO $ forever $ do
-        p <- play_mode
+        p <- atomically play_mode
         let delay = if p then play_length else score_length
         t0 <- getCurrentTime
         let next = addUTCTime (fromInteger delay) t0
@@ -190,18 +174,28 @@ main = do
         threadDelay (fromInteger delay * 1000000)
         case p of
             -- Go from play to score
-            True -> atomically $ do
-                writeTVar grid_var Nothing
-                scores <- M.toList <$> readTVar db
-                writeTVar scores_var scores
+            True -> do
+                thrd <- atomically $ do
+                    writeTVar state Nothing
+                    scores <- M.toList <$> readTVar db
+                    writeTVar scores_var scores
+                    notify_thread
+                withJust thrd killThread
+                sendToAll =<< makeScoreMsg
             -- Go from score to play
             False -> do
                 g <- makeGrid trigrams
+                thrd <- forkIO $ forever $ do
+                    sendToAll =<< makeScoreMsg
+                    threadDelay (1000 * 1000)
                 atomically $ do
-                    writeTVar grid_var (Just g)
+                    writeTVar state (Just (g,thrd))
+                    -- Change this so all logged in users start with 0 score instead
                     writeTVar db emptyUserDB
+                (`withJust` sendToAll) =<< makeGridMsg
 
-    scotty 3000 $ do
+    -- Web server
+    forkIO $ scotty 3000 $ do
 
         middleware logStdout
         middleware $ staticPolicy $ mconcat
@@ -211,61 +205,27 @@ main = do
                 ["html", "js", "css", "jpg", "txt"])
             ] <|> only (zip ["","/"] (repeat "frontend/index.html"))
 
-        get "/grid" $ do
-            g <- liftIO $ atomically $ do
-                mg <- readTVar grid_var
-                case mg of
-                    Nothing -> retry
-                    Just g' -> return g'
-            nc <- liftIO $ calc_next_change
-            json $ GridResponse
-                { grid_response    = g
-                , grid_char_scores = M.toList char_scores
-                , grid_timeout     = nc
-                }
+    -- Websocket server
+    runServer "0.0.0.0" 8000 $ \ rq -> do
 
-        get "/summary" $ do
-            scores <- liftIO $ atomically $ do
-                pm <- play_mode_stm
-                when pm retry
-                readTVar scores_var
-            nc <- liftIO calc_next_change
-            json $ SummaryResponse
-                { summary_scores  = scores
-                , summary_timeout = nc
-                }
+        WS.acceptRequest rq
+        WS.spawnPingThread 1
+        liftIO . putStrLn . ("Client version: " ++) =<< WS.getVersion
+        sink <- WS.getSink
+        login sink `catchWsError` handleErr sink
 
-        post "/submit" $ do
-            mg <- liftIO $ atomically $ readTVar grid_var
-            case mg of
-                Nothing -> json ()
-                Just grid -> do
-                    Just submit <- jsonData
-                    let word = map (grid `at`) (submitSnake submit)
-                        value = sum (map (char_scores M.!) word) + length word
-                        word_text = T.pack word
-                    res <- liftIO $ do
-                        T.putStrLn word_text
-                        (ok,(score',words')) <- atomically $ do
-                            let name = user submit
-                            user_placed <- userPlaced name word_text db
-                            let word_ok = word_text `HS.member` lexicon
-                                ok = not user_placed && word_ok
-                                (mod_score,mod_history)
-                                    | ok        = ((+ value),((word_text,value):))
-                                    | otherwise = (id,id)
-                            (,) ok <$> userMod name mod_score mod_history db
-                        nc <- calc_next_change
-                        return $ Response
-                            { correct      = ok
-                            , score        = score'
-                            , words        = words'
-                            , resp_timeout = nc
-                            }
-                    json res
+receiveJSON :: FromJSON a => WebSockets Hybi10 (Maybe a)
+receiveJSON = fmap decode WS.receiveData
 
-char_scores :: Map Char Int
-char_scores = M.fromList
+sendJSON :: ToJSON a => Sink Hybi10 -> a -> IO ()
+sendJSON s = WS.sendSink s . DataMessage . Text . encode
+
+withJust :: Monad m => Maybe a -> (a -> m ()) -> m ()
+withJust (Just m) f = f m
+withJust Nothing  _ = return ()
+
+charScores :: Map Char Int
+charScores = M.fromList
     [ ('A',1)
     , ('B',4)
     , ('C',8)

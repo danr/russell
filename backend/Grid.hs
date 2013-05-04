@@ -1,6 +1,9 @@
 {-# LANGUAGE OverloadedStrings, TupleSections #-}
 module Grid where
 
+import Data.HashSet (HashSet)
+import qualified Data.HashSet as HS
+
 import Control.Applicative
 
 import Data.Maybe
@@ -18,8 +21,27 @@ import qualified Data.Text.Lazy.IO as T
 import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
 
+import Data.Map (Map)
+import qualified Data.Map as M
+
+import Lexicon
+
 type Coord = (Int,Int)
 type Grid = [Text]
+type Snake = [Coord]
+
+submitSnake :: [[Int]] -> Snake
+submitSnake = map (\[x,y] -> (x,y))
+
+snakeOnGrid :: HashSet Text -> Grid -> Map Char Int -> [[Int]] -> Maybe (Text,Int)
+snakeOnGrid lexicon grid char_scores snake
+    | word_ok   = Just (word_text,value)
+    | otherwise = Nothing
+  where
+    word = map (grid `at`) (submitSnake snake)
+    value = sum (map (char_scores M.!) word) + length word
+    word_text = T.pack word
+    word_ok = word_text `HS.member` lexicon
 
 trigramCoordsFrom :: Coord -> [[Coord]]
 trigramCoordsFrom x0 = nub $
@@ -42,7 +64,6 @@ trigramCoordsFrom x0 = nub $
 placeTrigram :: [Coord] -> Text -> Grid -> Grid
 placeTrigram x t g = foldl (\g' (x',c) -> update g' x' c) g (zip x (T.unpack t))
 
-type Trigrams = HashMap Text Int
 
 lookupTrigram :: Trigrams -> Grid -> [Coord] -> Maybe Int
 lookupTrigram t g xs = HM.lookup (wordAt g xs) t
