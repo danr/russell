@@ -18,3 +18,4 @@ russell_module.factory 'log', () -> (x) -> console.log(x)
 
 russell_module.factory 'address', () -> "192.168.1.66"
 
+

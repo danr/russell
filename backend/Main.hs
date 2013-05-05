@@ -161,10 +161,11 @@ main = do
             -- Go from play to score
             True -> do
                 thrd <- atomically $ do
+                    thrd <- notify_thread
                     writeTVar state Nothing
                     scores <- M.toList <$> readTVar db
                     writeTVar scores_var scores
-                    notify_thread
+                    return thrd
                 withJust thrd killThread
                 sendToAll =<< makeScoreMsg
             -- Go from score to play

@@ -16,8 +16,10 @@ russell_module.controller 'UserCtrl', ($scope, websocket, make_url, resize) ->
         $scope.logged_in = true
 
     $scope.css = {}
-    resize.recalc (new_css) -> $scope.css = new_css
+
+    $scope.css = resize.recalc()
 
     # is this in AngularJS?
-    $(window).resize -> resize.recalc (new_css) -> $scope.css = new_css
+    $(window).resize -> $scope.$apply ->
+        $scope.css = resize.recalc()
 

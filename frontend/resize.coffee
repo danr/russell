@@ -1,7 +1,7 @@
 
-window.russell_module.factory 'resize', () ->
+russell_module.factory 'resize', () ->
 
-    recalc: (set_css) ->
+    recalc: () ->
 
         h = $(window).height()
         w = $(window).width()
@@ -48,37 +48,36 @@ window.russell_module.factory 'resize', () ->
         char_size = Math.floor(inner * 0.84)
         score_size = Math.floor(inner * 0.2)
 
-        set_css
-            tile:
-                width: inner_r
-                height: inner_r
-                margin: margin_r
-                'border-width': border_r
-            char:
-                'font-size': char_size
-            score:
-                'font-size': score_size
-            shadow_score:
-                'font-size': score_size
-            top:
-                height: top
-                'font-size': Math.round(top * 0.9)
-            bottom:
-                height: bottom
-                'font-size': Math.round(bottom * 0.9)
-            top_space:
-                height: space
-            bottom_space:
-                height: space
-            row:
-                width: Math.floor(w * 0.9)
-                'font-size': Math.round(bottom * 0.8)
-            row_ident:
-                'margin-left': Math.floor(w * 0.1)
-                'font-size': Math.round(bottom * 0.5)
-            one_third:
-                width: Math.floor((w * 0.9) / 3)
-            container:
-                width: Math.floor center
-                height: Math.floor h
+        tile:
+            width: inner_r
+            height: inner_r
+            margin: margin_r
+            'border-width': border_r
+        char:
+            'font-size': char_size
+        score:
+            'font-size': score_size
+        shadow_score:
+            'font-size': score_size
+        top:
+            height: top
+            'font-size': Math.round(top * 0.9)
+        bottom:
+            height: bottom
+            'font-size': Math.round(bottom * 0.9)
+        top_space:
+            height: space
+        bottom_space:
+            height: space
+        row:
+            width: Math.floor(w * 0.9)
+            'font-size': Math.round(bottom * 0.8)
+        row_ident:
+            'margin-left': Math.floor(w * 0.1)
+            'font-size': Math.round(bottom * 0.5)
+        one_third:
+            width: Math.floor((w * 0.9) / 3)
+        container:
+            width: Math.floor center
+            height: Math.floor h
 
