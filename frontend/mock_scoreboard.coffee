@@ -1,5 +1,7 @@
 
-russell_module.factory 'websocket', ->
+window.mock_scoreboard = ->
+
+    connect: ->
 
     send : ->
 

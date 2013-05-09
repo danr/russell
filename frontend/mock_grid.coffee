@@ -1,9 +1,5 @@
 
-russell_module.factory 'websocket',
-
-if window.location.query['debug']
-
-mock_websocket = ($timeout) ->
+window.mock_grid = ($timeout) ->
 
     time = 900
 
@@ -36,6 +32,8 @@ mock_websocket = ($timeout) ->
         $timeout send_sb, 1000
 
     send_sb()
+
+    connect: ->
 
     send : ->
 

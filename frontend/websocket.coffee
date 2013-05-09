@@ -1,5 +1,5 @@
 
-russell_module.factory 'websocket', ($q, $log) ->
+window.websocket_factory = ($q, $log) ->
 
     log = $log.log
 
@@ -53,8 +53,4 @@ russell_module.factory 'websocket', ($q, $log) ->
         unless command_str in command_map
             command_map[command_str] = []
             command_map[command_str].push ['once', callback]
-
-russell_module.run (websocket, address, $log) ->
-    $log.info "Connecting to websocket"
-    websocket.connect("ws://#{address}:8000")
 
