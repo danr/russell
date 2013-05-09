@@ -1,4 +1,4 @@
-russell_module.controller 'SummaryCtrl', ($scope, websocket, snake, make_url) ->
+russell_module.controller 'SummaryCtrl', ($scope, websocket) ->
 
     websocket.on "FinalScores", (data) -> $scope.$apply ->
         # ??

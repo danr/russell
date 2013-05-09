@@ -13,8 +13,9 @@ import qualified Data.Text.Lazy.IO as T
 import qualified Data.Text.Lazy.Read as T
 
 type Trigrams = HashMap Text Int
+type Lexicon = HashSet Text
 
-readLexicon :: FilePath -> IO (HashSet Text)
+readLexicon :: FilePath -> IO Lexicon
 readLexicon file = HS.fromList . T.lines <$> T.readFile file
 
 readTrigrams :: FilePath -> IO Trigrams

@@ -1,5 +1,9 @@
 
-russell_module.factory 'websocket', ($timeout) ->
+russell_module.factory 'websocket',
+
+if window.location.query['debug']
+
+mock_websocket = ($timeout) ->
 
     time = 900
 

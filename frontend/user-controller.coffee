@@ -1,4 +1,4 @@
-russell_module.controller 'UserCtrl', ($scope, websocket, make_url, resize) ->
+russell_module.controller 'UserCtrl', ($scope, websocket, resize) ->
 
     $scope.user = ""
 

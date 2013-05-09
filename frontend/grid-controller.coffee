@@ -50,7 +50,7 @@ russell_module.controller 'GridCtrl', ($scope, websocket, $q, $timeout) ->
                 Submit:
                     snake: snake_copy
 
-            websocket.once "Response", (res) -> $scope.apply ->
+            websocket.once "Response", (res) -> $scope.$apply ->
                 console.log "Handling", res
                 new_status = if res.correct then "correct" else "wrong"
                 console.log "New status: #{new_status}"

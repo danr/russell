@@ -110,7 +110,7 @@ makeGrid t = do
     iter (placeTrigram xs t0 emptyGrid)
   where
     iter g
-        | length (emptyCoords g) == 0 = return g
+        | null (emptyCoords g) = return g
         | otherwise = do
             -- mapM_ T.putStrLn g
             -- T.putStrLn ""
@@ -155,7 +155,7 @@ pickRandomElt xs = do
     return (xs !! i)
 
 coords :: [Coord]
-coords = concat $ [ [ (x,y) | x <- [0..3] ] | y <- [0..3] ]
+coords = concat [ [ (x,y) | x <- [0..3] ] | y <- [0..3] ]
 
 emptyCoords :: Grid -> [Coord]
 emptyCoords g = filter (emptyPos g) coords

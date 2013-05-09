@@ -1,7 +1,5 @@
 window.russell_module = angular.module 'russell', []
 
-russell_module.factory 'make_url', () -> (s) -> "http://#{window.location.host}" + s
-
 russell_module.filter 'sec', () -> (t) ->
 
     s = Math.round(t / 1000)
@@ -14,8 +12,5 @@ russell_module.filter 'sec', () -> (t) ->
     else
         "#{min}:#{sec}"
 
-russell_module.factory 'log', () -> (x) -> console.log(x)
-
-russell_module.factory 'address', () -> "192.168.1.66"
-
+russell_module.factory 'address', () -> "#{window.location.hostname}"
 

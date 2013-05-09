@@ -1,5 +1,7 @@
 
-russell_module.factory 'websocket', ($q, log) ->
+russell_module.factory 'websocket', ($q, $log) ->
+
+    log = $log.log
 
     def = $q.defer()
     command_map = {}
@@ -52,7 +54,7 @@ russell_module.factory 'websocket', ($q, log) ->
             command_map[command_str] = []
             command_map[command_str].push ['once', callback]
 
-russell_module.run (websocket, address, log) ->
-    log "Sending to websocket"
+russell_module.run (websocket, address, $log) ->
+    $log.info "Connecting to websocket"
     websocket.connect("ws://#{address}:8000")
 
