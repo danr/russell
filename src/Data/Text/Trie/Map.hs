@@ -23,7 +23,6 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Maybe (fromMaybe,isNothing,isJust)
 import Data.Data
-import Data.Typeable
 import Data.Foldable
 import Data.Monoid
 import Test.QuickCheck
@@ -40,7 +39,7 @@ instance Arbitrary a => Arbitrary (TrieMap a) where
 
 -- | The trie map invariant
 invariant :: TrieMap a -> Bool
-invariant (Node e m) = all innerInvariant m
+invariant (Node _ m) = all innerInvariant m
 
 innerInvariant :: TrieMap a -> Bool
 innerInvariant (Node e m) = all innerInvariant m && (isJust e || not (M.null m))
@@ -67,18 +66,16 @@ top (Node x _) = x
 insert :: Text -> a -> TrieMap a -> TrieMap a
 insert s v (Node x m)
     | T.null s  = Node (Just v) m
-    | otherwise = Node x (rec s v m)
+    | otherwise = Node x rec
   where
-    rec :: Text -> a -> Map Char (TrieMap a) -> Map Char (TrieMap a)
-    rec s v = M.alter (Just . insert (T.tail s) v . fromMaybe empty) (T.head s)
+    rec = M.alter (Just . insert (T.tail s) v . fromMaybe empty) (T.head s) m
 
 -- | Inserts a string into the trie
 insertString :: String -> a -> TrieMap a -> TrieMap a
-insertString []    v (Node x m) = Node (Just v) m
-insertString (c:s) v (Node x m) = Node x (rec c s v m)
+insertString []    v (Node _ m) = Node (Just v) m
+insertString (c:s) v (Node x m) = Node x rec
   where
-    rec :: Char -> String -> a -> Map Char (TrieMap a) -> Map Char (TrieMap a)
-    rec c s v = M.alter (Just . insertString s v . fromMaybe empty) c
+    rec = M.alter (Just . insertString s v . fromMaybe empty) c m
 
 -- | Gets the subtrie from following this `Char` if there is one
 follow :: Char -> TrieMap a -> Maybe (TrieMap a)

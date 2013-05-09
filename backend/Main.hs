@@ -21,18 +21,12 @@ import Game
 import RusselMonad
 import Websocket
 
-lexiconFile :: FilePath
-lexiconFile = "lexicon/saldom-stripped"
-
-trigramsFile :: FilePath
-trigramsFile = "lexicon/saldom-trigram-count"
-
 main :: IO ()
 main = do
 
-    lexicon <- readLexicon lexiconFile
+    lexicon <- readLexicon
 
-    trigrams <- readTrigrams trigramsFile
+    trigrams <- readTrigrams
 
     current_time <- getCurrentTime
 

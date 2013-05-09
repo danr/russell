@@ -62,9 +62,10 @@ gridMaker :: RusselM ()
 gridMaker = do
     RusselEnv{trigrams,next_grid} <- ask
     forever $ liftIO $ do
-        g <- makeGrid trigrams
+        g <- convertOldGrid <$> makeOldGrid trigrams
         putStrLn "Grid created!"
         atomically (putTMVar next_grid g)
+        putStrLn "Grid put in mvar!"
 
 notify :: RusselM ()
 notify = forever $ do

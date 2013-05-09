@@ -3,6 +3,7 @@
 module Data.Text.Trie.Set
     ( TrieSet
     , size
+    , top
     , empty
     , isEmpty
     , insert
@@ -11,15 +12,14 @@ module Data.Text.Trie.Set
     , fromList
     , fromStringList
     , member
+    , memberString
     ) where
 
 import Prelude hiding (lookup)
 import Data.Foldable (foldl')
-import Data.Map (Map)
 import Data.Text (Text)
 import Data.Maybe (isJust)
 import Data.Data
-import Data.Typeable
 import Data.Text.Trie.Map (TrieMap)
 import qualified Data.Text.Trie.Map as TM
 import Test.QuickCheck

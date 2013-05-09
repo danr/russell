@@ -12,9 +12,11 @@ cabal-version:       >=1.8
 executable russell
   main-is:           Main.hs
   ghc-options:       -threaded -O2 -Wall
-  hs-source-dirs:    backend
+  hs-source-dirs:    backend src
   build-depends:
         base >=4.5
+      , QuickCheck
+      , array
       , websockets >= 0.7.3
       , mtl
       , ghc-prim

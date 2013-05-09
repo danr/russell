@@ -3,7 +3,7 @@ module UserDB where
 
 import Control.Applicative
 
-import Data.Text.Lazy (Text)
+import Data.Text (Text)
 import Control.Concurrent.STM
 import Data.Map (Map)
 import qualified Data.Map as M
