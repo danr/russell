@@ -39,7 +39,7 @@ window.mock_grid = ($timeout) ->
 
     once : (cmd, cb) ->
         if cmd == "Response"
-            cb random_update "you"
+            $timeout (-> cb random_update "you"), _.random 0,300
 
     on : (cmd, cb) ->
         if cmd == "ScoreBoard"

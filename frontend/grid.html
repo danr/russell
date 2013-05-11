@@ -1,0 +1,30 @@
+<div ng-show="logged_in && play_mode" ngm-vmouseup="up()" ngm-vmousemove="enter($event)" >
+
+  <div id="top" ng-style="css.top">
+    <span ng-class="last_status">&nbsp;{{ word() }}&nbsp;</span>
+  </div>
+
+  <div id="top-space" ng-style="css.bottom_space"></div>
+
+  <div class="row" ng-init="y = $index" ng-repeat="row in grid">
+    <div class="tile" ng-style="css.tile"
+      ng-init="x = $index" ng-repeat="col in row"
+      ngm-vmousedown="down(x,y)"
+      ng-class="status(x,y)">
+      <span ng-style="css.shadow_score" class="shadow-score">{{ char_score(col) }}</span>
+      <span ng-style="css.char" class="char">{{ col }}</span>
+      <span ng-style="css.score" class="score">{{ char_score(col) }}</span>
+      <span id="x">{{ x }}</span>
+      <span id="y">{{ y }}</span>
+    </div>
+  </div>
+
+  <div ng-style="css.bottom_space"></div>
+
+  <div id="bottom" ng-style="css.bottom">
+    <div ng-style="css.one_third" style="display:inline-block">{{ time | sec }}&nbsp;</div>
+    <div ng-style="css.one_third" style="display:inline-block; text-align:center;">&nbsp;{{ score }}</div>
+    <div ng-style="css.one_third" style="display:inline-block; text-align:right;">&nbsp;{{ words }}</div>
+  </div>
+
+</div>

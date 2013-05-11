@@ -1,4 +1,4 @@
-russell_module.controller 'GridCtrl', ($scope, websocket, $q, $timeout) ->
+russell_module.controller 'GridCtrl', ($scope, websocket, $q, $timeout, $log) ->
 
     # Snake logic
     # The problem is that the snake logic takes care of the statuses
@@ -51,9 +51,9 @@ russell_module.controller 'GridCtrl', ($scope, websocket, $q, $timeout) ->
                     snake: snake_copy
 
             websocket.once "Response", (res) -> $scope.$apply ->
-                console.log "Handling", res
+                $log.log "Handling", res
                 new_status = if res.correct then "correct" else "wrong"
-                console.log "New status: #{new_status}"
+                $log.log "New status: #{new_status}"
                 upd_status "submitted", new_status, snake_copy
                 answer.resolve _.extend res,
                     new_status: new_status
@@ -74,7 +74,7 @@ russell_module.controller 'GridCtrl', ($scope, websocket, $q, $timeout) ->
     # Grid logic and controller
     $scope.status = (x,y) ->
         res = $scope.statuses[x][y]
-        # console.log "Status #{x} #{y} = #{res}"
+        # $log.log "Status #{x} #{y} = #{res}"
         res
 
     $scope.reset = () ->
@@ -97,10 +97,12 @@ russell_module.controller 'GridCtrl', ($scope, websocket, $q, $timeout) ->
 
     $scope.char_score = (char) -> $scope.scores[char]
 
-    $scope.down = () ->
+    $scope.down = (x,y) ->
         $scope.drawing = true
         $scope.last_status = "selected"
+        $scope.coord = [x,y]
         Snake.push($scope.coord)
+        $scope.info = "down #{x}, #{y}"
 
     $scope.up = () ->
         $scope.drawing = false
@@ -126,6 +128,7 @@ russell_module.controller 'GridCtrl', ($scope, websocket, $q, $timeout) ->
             $scope.coord = [x,y]
             if $scope.drawing
                 Snake.push($scope.coord)
+                $scope.info = "enter #{x}, #{y}"
 
     $scope.lookup = (x,y) -> $scope.grid[y][x]
 
@@ -140,5 +143,6 @@ russell_module.controller 'GridCtrl', ($scope, websocket, $q, $timeout) ->
         $scope.$parent.play_mode = true
 
     websocket.on "ScoreBoard", (data) -> $scope.$apply ->
+        $log.log data
         $scope.time = data.timeout
 
