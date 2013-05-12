@@ -6,35 +6,23 @@ russell_module.factory 'resize', () ->
         h = $(window).height()
         w = $(window).width()
 
-        # Divide into three panes,
-        # top, center, bottom
-
-        TOP_PANE = 0.1
-        BOTTOM_PANE = 0.1
+        # The area is divided to six sections,
+        # Top, the four grids, then the bottom.
+        # A stripe is half the top (or the bottom)
 
         INNER = 0.75
         MARGIN = 1 - INNER
         BORDER = 0.015
 
-        PANES = 1 + TOP_PANE + BOTTOM_PANE
+        PANES = 1.5
 
         # Required height is w * PANES, if it is too much, make it less wide
         if h < w * PANES
             w = h / PANES
 
-        top    = Math.floor(w * TOP_PANE)
+        stripe = Math.floor(h * 1/12)
         center = w
-        bottom = Math.floor(w * BOTTOM_PANE)
-
-        space = Math.floor ((h - top - center - bottom) / 2)
-
-        # $('#top-space,#bottom-space').css('height',space)
-
-        # $('.oneThird').css('width',Math.floor((w * 0.9)/3))
-
-        # $('div.container')
-        #     .css('width',Math.floor center)
-        #     .css('height',Math.floor h)
+        leftover = Math.floor((h-(4*stripe+center))/2)
 
         # Sides of a tile
         side = center / 4
@@ -59,25 +47,28 @@ russell_module.factory 'resize', () ->
             'font-size': score_size
         shadow_score:
             'font-size': score_size
-        top:
-            height: top
-            'font-size': Math.round(top * 0.9)
-        bottom:
-            height: bottom
-            'font-size': Math.round(bottom * 0.9)
-        top_space:
-            height: space
-        bottom_space:
-            height: space
         row:
             width: Math.floor(w * 0.9)
-            'font-size': Math.round(bottom * 0.8)
-        row_ident:
-            'margin-left': Math.floor(w * 0.1)
-            'font-size': Math.round(bottom * 0.5)
+            'font-size': Math.round(w * 0.7)
+
+        font_small:
+            'font-size': Math.round(stripe * 0.55)
+        font_normal:
+            'font-size': Math.round(stripe * 0.7)
+        long_stripe:
+            height: stripe + leftover
+        stripe:
+            height: stripe
+        long_dbl_stripe:
+            height: stripe*2 + leftover
+
         one_third:
-            width: Math.floor((w * 0.9) / 3)
+            width: Math.floor(w * 0.3)
+
+        small_indent:
+            'margin-left': Math.floor(w*0.1)
+
         container:
-            width: Math.floor center
-            height: Math.floor h
+            height: h
+            width: w
 

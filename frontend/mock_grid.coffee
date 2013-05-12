@@ -28,7 +28,7 @@ window.mock_grid = ($timeout) ->
         random_update "Ada"
         sbcb
             timeout: time-- * 1000
-            scores: ([name,w,s] for name, [w,s] of scores)
+            scores: ([name,s,w] for name, [w,s] of scores)
         $timeout send_sb, 1000
 
     send_sb()

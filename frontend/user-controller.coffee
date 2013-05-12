@@ -23,3 +23,11 @@ russell_module.controller 'UserCtrl', ($scope, websocket, resize) ->
     $(window).resize -> $scope.$apply ->
         $scope.css = resize.recalc()
 
+    $scope.join = (objs...) ->
+        s = {}
+        for o in objs
+            for k,v of o
+                s[k] = v
+        s
+
+    console.log $scope.join (apa: 1), (cepa: 2), (epa: 3)

@@ -1,10 +1,16 @@
-<div ng-show="logged_in && play_mode" ngm-vmouseup="up()" ngm-vmousemove="enter($event)" >
+<div class="container" ng-style="css.container"
+  ng-show="logged_in && play_mode"
+  ngm-vmouseup="up()" ngm-vmousemove="enter($event)">
 
-  <div id="top" ng-style="css.top">
-    <span ng-class="last_status">&nbsp;{{ word() }}&nbsp;</span>
+  <div class="stripe" ng-style="join(css.stripe,css.font_small)">
+    <div class="left"   ng-style="css.one_third">&nbsp;{{ words }}</div>
+    <div class="middle" ng-style="css.one_third">&nbsp;{{ score }}</div>
+    <div class="right"  ng-style="css.one_third">{{ time | sec }}&nbsp;</div>
   </div>
 
-  <div id="top-space" ng-style="css.bottom_space"></div>
+  <div class="stripe" ng-style="join(css.font_normal,css.long_stripe)">
+    <span ng-class="last_status">&nbsp;{{ word() }}&nbsp;</span>
+  </div>
 
   <div class="row" ng-init="y = $index" ng-repeat="row in grid">
     <div class="tile" ng-style="css.tile"
@@ -19,12 +25,8 @@
     </div>
   </div>
 
-  <div ng-style="css.bottom_space"></div>
-
-  <div id="bottom" ng-style="css.bottom">
-    <div ng-style="css.one_third" style="display:inline-block">{{ time | sec }}&nbsp;</div>
-    <div ng-style="css.one_third" style="display:inline-block; text-align:center;">&nbsp;{{ score }}</div>
-    <div ng-style="css.one_third" style="display:inline-block; text-align:right;">&nbsp;{{ words }}</div>
+  <div class="stripe" ng-style="join(css.long_dbl_stripe,css.font_small)">
+    <div ng-repeat="p in scores">{{ p.name }}: {{ p.score }}</div>
   </div>
 
 </div>

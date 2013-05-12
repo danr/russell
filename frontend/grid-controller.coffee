@@ -1,5 +1,7 @@
 russell_module.controller 'GridCtrl', ($scope, websocket, $q, $timeout, $log) ->
 
+    $scope.scores = []
+
     # Snake logic
     # The problem is that the snake logic takes care of the statuses
     # The division is meant that everything about the snake and the
@@ -145,4 +147,8 @@ russell_module.controller 'GridCtrl', ($scope, websocket, $q, $timeout, $log) ->
     websocket.on "ScoreBoard", (data) -> $scope.$apply ->
         $log.log data
         $scope.time = data.timeout
+        $scope.scores = for [name,score,words] in data.scores
+            name: name
+            score: score
+        $scope.scores.sort (s1,s2) -> s2.score - s1.score
 

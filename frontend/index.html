@@ -24,25 +24,22 @@
   <body ng-controller="UserCtrl">
 
     <div class="container" ng-style="css.container" ng-hide="logged_in">
-      <div class="login" ng-style="css.row">
+      <div class="login" ng-style="css.font_normal">
         <strong>Russells ordorm</strong>
-        <input type="text" ng-model="user" ng-style="css.row">
+        <input type="text" ng-model="user" ng-style="css.font_normal">
         <a ng-click="login()">Play!</a>
       </div>
     </div>
 
-    <div class="container" ng-style="css.container" ng-controller="SummaryCtrl"
-      ng-show="logged_in && !play_mode">
-      <div ng-style="css.row" ng-repeat="user in summary" class="res_row">
+    <div ng-controller="SummaryCtrl" ng-show="logged_in && !play_mode" class="scoreboard">
+      <div ng-style="css.font_normal" ng-repeat="user in summary">
         {{ user.score }}: <strong>{{ user.name }}</strong> ({{ user.words }})
-        <div ng-style="css.row_ident" ng-repeat="w in user.best">{{ w.score }}: {{ w.word }}</div>
+        <div ng-style="join(css.small_indent,css.font_small)"
+             ng-repeat="w in user.best">{{ w.score }}: {{ w.word }}</div>
       </div>
-      <!-- <pre>{{ summary | json }}</pre> -->
     </div>
 
-    <div class="container" ng-style="css.container" ng-controller="GridCtrl"
-         ng-include="'grid.html'">
-    </div>
+    <div ng-controller="GridCtrl" ng-include="'grid.html'"></div>
 
   </body>
 </html>
